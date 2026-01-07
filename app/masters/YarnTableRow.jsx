@@ -1,3 +1,4 @@
+"use client"
 import { Button, Badge } from "react-bootstrap";
 
 const YarnTableRow = ({ yarn, onEdit, onDelete }) => {

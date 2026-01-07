@@ -1,4 +1,5 @@
 // src/components/masters/SizingTableRow.jsx
+"use client"
 import React from "react";
 import { Button, Badge } from "react-bootstrap";
 

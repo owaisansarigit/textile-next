@@ -1,3 +1,4 @@
+"use client"
 import { Container, Row, Col, Nav, Tab } from "react-bootstrap";
 import LedgerTab from "./LedgerTab";
 import GroupTab from "./GroupTab";

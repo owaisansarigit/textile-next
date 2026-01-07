@@ -1,3 +1,4 @@
+"use client"
 import { useState, useEffect, useRef } from "react";
 import { Modal, Button, Form, Alert } from "react-bootstrap";
 import { groupService } from "../../db/dbServices";

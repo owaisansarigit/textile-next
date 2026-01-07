@@ -1,3 +1,4 @@
+"use client"
 import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Card, Button, Table, Spinner } from "react-bootstrap";

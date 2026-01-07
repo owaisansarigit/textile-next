@@ -1,7 +1,11 @@
+"use client"
 import { useState, useEffect } from "react";
 import { Modal, Button, Form, Row, Col } from "react-bootstrap";
 import { useLiveQuery } from "dexie-react-hooks";
 import { yarnService, clothService } from "../../db/dbServices";
+
+
+
 
 const ClothModal = ({ show, onHide, editingCloth }) => {
   const categories = ["Cotton", "Rayon", "CP", "Roto"];

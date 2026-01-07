@@ -18,6 +18,8 @@
 //   closingBalance: 0,
 //   beamDetails: [],
 // };
+
+"use client";
 import React, { useState, useEffect, useMemo } from "react";
 import { sizingService, yarnService, ledgerService } from "../../db/dbServices";
 import SetHeaderSection from "./setFormComps/SetHeaderSection";

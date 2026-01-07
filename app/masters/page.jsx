@@ -1,5 +1,11 @@
+import MasterManager from "./MasterManager";
+
 const page = () => {
-  return <div>page</div>;
+  return (
+    <>
+      <MasterManager />
+    </>
+  );
 };
 
 export default page;
