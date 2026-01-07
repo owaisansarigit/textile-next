@@ -58,7 +58,6 @@ export async function GET(request) {
     }
 }
 
-// POST create new group
 export async function POST(request) {
     try {
         await connectDB();

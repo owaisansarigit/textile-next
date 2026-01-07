@@ -56,7 +56,7 @@ import {
   getLedgerById,
   updateLedger,
   deleteLedger,
-} from "@/lib/services/ledger.service";
+} from "../../../lib/services/ledgerServices";
 
 export const GET = async (
   _req: Request,
