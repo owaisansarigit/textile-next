@@ -1,21 +1,39 @@
 import mongoose from "mongoose";
-const MONGODB_URI = process.env.MONGODB_URI!;
-if (!MONGODB_URI) {
-  throw new Error("MONGODB_URI not defined");
+const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
+if (!MONGO_URI) {
+  console.error("[Mongo] ❌ MONGO_URI missing");
+  throw new Error("Please define MONGO_URI in .env");
 }
-let cached = global.mongoose;
+let cached = global._mongoose;
 if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
+  console.log("[Mongo] 🆕 Creating global mongoose cache");
+  cached = global._mongoose = {
+    conn: null,
+    promise: null,
+  };
+} else {
+  console.log("[Mongo] ♻️ Using existing global mongoose cache");
 }
-export const connectMongo = async () => {
-  if (cached.conn) return cached.conn;
-
+export async function connectDB() {
+  if (cached.conn) {
+    console.log("[Mongo] ✅ Reusing existing MongoDB connection");
+    return cached.conn;
+  }
+  if (cached.promise) {
+    console.log("[Mongo] ⏳ Awaiting existing connection promise");
+  }
   if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGODB_URI, {
+    console.log("[Mongo] 🔌 Creating new MongoDB connection...");
+    cached.promise = mongoose.connect(MONGO_URI, {
+      dbName: "textile",
+      maxPoolSize: 10,
       bufferCommands: false,
+      serverSelectionTimeoutMS: 3000,
     });
   }
-
   cached.conn = await cached.promise;
+  mongoose.connection.once("open", () => {
+    console.log("[Mongo] 🚀 MongoDB connected successfully");
+  });
   return cached.conn;
-};
+}

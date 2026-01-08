@@ -1,4 +1,4 @@
-import HomePage from "../app/dashboard/page";
+import HomePage from "./dashboard/page";
 const page = () => {
   return <HomePage />;
 };

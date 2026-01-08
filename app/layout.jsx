@@ -1,7 +1,9 @@
-import { AppProvider } from "../app/providers/AppProvider";
-import MainLayout from "../app/components/MainLayout";
-import "bootstrap/dist/css/bootstrap.min.css";
+import { AppProvider } from "./providers/AppProvider";
+import { connectDB } from "./lib/db/mongo";
+connectDB();
 
+import MainLayout from "./components/MainLayout";
+import "bootstrap/dist/css/bootstrap.min.css";
 
 export default function RootLayout({ children }) {
   return (

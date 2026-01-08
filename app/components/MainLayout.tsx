@@ -1,7 +1,7 @@
 "use client";
 import { Box } from "@mui/material";
-import Sidebar from "../components/Sidebar";
-import Topbar from "../components/Topbar";
+import Sidebar from "./Sidebar";
+import Topbar from "./Topbar";
 const drawerWidth = 240;
 const topbarHeight = 64;
 export default function MainLayout({ children }) {

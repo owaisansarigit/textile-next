@@ -1,12 +1,9 @@
 import mongoose from 'mongoose';
-
 const MONGODB_URI = process.env.MONGODB_URI;
-
 if (!MONGODB_URI) {
     throw new Error('Please define the MONGODB_URI environment variable');
 }
 
-// Global cache for connection
 const globalWithMongo = global;
 globalWithMongo.mongoose = globalWithMongo.mongoose || {};
 
@@ -82,15 +79,15 @@ async function connectDB() {
     return cached.conn;
 }
 
-// Initialize connection immediately
+
 connectDB().catch(console.error);
 
-// Optional: Auto-reconnect on failure
+
 setInterval(() => {
     if (mongoose.connection.readyState !== 1) {
         console.log('🔄 Attempting to reconnect to MongoDB...');
         connectDB().catch(console.error);
     }
-}, 10000); // Check every 10 seconds
+}, 10000);
 
 export default connectDB;

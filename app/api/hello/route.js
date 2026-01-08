@@ -1,5 +1,4 @@
 export async function GET(request) {
-  await new Promise((resolve) => setTimeout(resolve, 300));
   return Response.json({
     message: "Hello from GET API!",
     timestamp: new Date().toISOString(),
@@ -7,11 +6,10 @@ export async function GET(request) {
   });
 }
 
-export async function POST(request) {  
-  await new Promise((resolve) => setTimeout(resolve, 500));
+export async function POST(request) {
   try {
     const body = await request.json();
-    console.log(body)
+    console.log(body);
     return Response.json({
       message: "Hello from POST API!",
       receivedData: body,

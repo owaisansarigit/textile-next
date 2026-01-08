@@ -1,4 +1,4 @@
-import { getAllLedgers, createLedger } from "../ledgers/service";
+import { getAllLedgers, createLedger } from "./service";
 
 export const GET = async (req: Request) => {
   const { searchParams } = new URL(req.url);

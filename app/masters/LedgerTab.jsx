@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { useState, useMemo } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Card, Button, Table, Spinner } from "react-bootstrap";
@@ -6,7 +6,14 @@ import textileDB from "../../db/textileDB";
 import LedgerModal from "./LedgerModal";
 import LedgerTableRow from "./LedgerTableRow";
 
-const LedgerTab = () => {  
+const LedgerTab = () => {
+  const getAll = async () => {
+    const res = await fetch("/api/wledgers");
+    // .then((res) => res.json());
+    console.log(res);
+  };
+  getAll();
+
   const groups = useLiveQuery(() => textileDB.groups.toArray(), [], []);
   const ledgers = useLiveQuery(() => textileDB.wLedgers.toArray(), [], []);
 
@@ -37,7 +44,7 @@ const LedgerTab = () => {
       }
     }
   };
-  
+
   const groupMap = useMemo(() => {
     const map = {};
     groups.forEach((g) => {
@@ -45,7 +52,7 @@ const LedgerTab = () => {
     });
     return map;
   }, [groups]);
-  
+
   const isLoading = groups === undefined || ledgers === undefined;
 
   return (
