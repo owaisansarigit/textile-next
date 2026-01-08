@@ -1,9 +1,8 @@
 import mongoose from 'mongoose';
-
 const wLedgerSchema = new mongoose.Schema({
     name: {
         type: String,
-        required: [true, 'Weaving ledger name is required'],
+        required: true,
         unique: true,
         trim: true
     },
@@ -35,11 +34,6 @@ const wLedgerSchema = new mongoose.Schema({
         email: String,
         address: String
     },
-    status: {
-        type: String,
-        enum: ['active', 'inactive', 'suspended'],
-        default: 'active'
-    }
 }, {
     timestamps: true
 });

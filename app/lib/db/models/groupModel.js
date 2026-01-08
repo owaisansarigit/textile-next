@@ -1,29 +1,61 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-const groupSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: [true, 'Group name is required'],
-        unique: true,
-        trim: true,
-        maxlength: [100, 'Group name cannot exceed 100 characters']
+const groupSchema = new mongoose.Schema(
+    {
+        name: {
+            type: String,
+            required: true,
+            unique: true,
+            trim: true,
+        },
     },
-    description: {
-        type: String,
-        trim: true,
-        maxlength: [500, 'Description cannot exceed 500 characters']
-    },
-    status: {
-        type: String,
-        enum: ['active', 'inactive'],
-        default: 'active'
-    }
-}, {
-    timestamps: true
-});
+    { timestamps: true }
+);
 
-// Add index for better query performance
 groupSchema.index({ name: 1 });
 
-// Prevent recompilation in development
-export const Group = mongoose.models.Group || mongoose.model('Group', groupSchema);
+export const Group =
+    mongoose.models.Group || mongoose.model("Group", groupSchema);
+
+
+
+const DEFAULT_GROUPS = [
+    "Sundry Debtors",
+    "Sundry Creditors",
+    "Weavers",
+    "Yarn Suppliers",
+    "Cash",
+    "Bank",
+    "Expenses",
+    "Indirect Expenses",
+    "Income",
+    "Capital Account",
+];
+
+async function seedGroups() {
+    const existing = await Group.find({}, { name: 1 }).lean();
+
+    if (existing.length > 0) {
+        console.log("[Group] ♻️ Groups already exist:");
+        existing.forEach(g =>
+            console.log(`   • ${g.name} → ${g._id}`)
+        );
+        return;
+    }
+
+    const created = await Group.insertMany(
+        DEFAULT_GROUPS.map(name => ({ name }))
+    );
+
+    console.log("[Group] ✅ Default groups created:");
+    created.forEach(g =>
+        console.log(`   • ${g.name} → ${g._id}`)
+    );
+}
+
+
+if (mongoose.connection.readyState === 1) {
+    seedGroups();
+} else {
+    mongoose.connection.once("open", seedGroups);
+}
