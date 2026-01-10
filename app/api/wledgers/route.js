@@ -1,7 +1,7 @@
 import { connectDB } from "../../lib/db/mongo";
 import { WLedger } from "../../lib/db/models/wLedgerModel";
-import { group } from "../../lib/db/models/groupModel";
 import { NextResponse } from "next/server";
+
 
 const data = [
     {
@@ -140,27 +140,13 @@ const data = [
     }
 ]
 
-
-
 export async function GET() {
     await connectDB();
-    const ledgers = await WLedger.find()
-    const groups = await WLedger.find()
-        .populate("group", "695fbc98671a96f61c0a005c")
-        .sort({ name: 1 });
-    for (const d of data) {
-        const a = await WLedger.create(d)
-
-    }
-    console.log(ledgers)
-    console.log(groups)
-
+    const ledgers = await WLedger.find().populate("group")
+    ledgers.forEach(g => console.log(`   • ${g.name} →  ${g.group.name}`))
     return NextResponse.json(ledgers);
 }
 
-/**
- * CREATE weaving ledger
- */
 export async function POST(req) {
     await connectDB();
 
