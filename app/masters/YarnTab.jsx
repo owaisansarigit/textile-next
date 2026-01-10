@@ -1,45 +1,44 @@
-"use client"
-import { useState } from "react";
-import { useLiveQuery } from "dexie-react-hooks";
+"use client";
+import { useEffect, useState } from "react";
 import { Card, Button, Table, Spinner } from "react-bootstrap";
-import textileDB from "../../db/textileDB";
 import YarnModal from "./YarnModal";
 import YarnTableRow from "./YarnTableRow";
 import { yarnService } from "../../db/dbServices";
-
 const YarnTab = () => {
-  const yarns = useLiveQuery(() => textileDB.yarn.toArray(), [], []);
+  const [yarns, setYarns] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingYarn, setEditingYarn] = useState(null);
-
+  const getAll = async () => {
+    const res = await fetch("/api/yarn").then((res) => res.json());
+    console.log(res);
+    setYarns(res);
+  };
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this yarn master?")) {
       try {
-        await yarnService.delete(id);
+        const res = await fetch(`/api/yarn/${id}`, "DELETE");
       } catch (err) {
         console.error(err);
         alert("Failed to delete yarn master");
       }
     }
   };
-
   const openCreate = () => {
     setEditingYarn(null);
     setShowModal(true);
   };
-
   const openEdit = (yarn) => {
     setEditingYarn(yarn);
     setShowModal(true);
   };
-
   const closeModal = () => {
     setShowModal(false);
     setEditingYarn(null);
   };
-
+  useEffect(() => {
+    getAll();
+  }, []);
   const isLoading = yarns === undefined;
-
   return (
     <>
       <Card className="shadow-sm">
@@ -54,10 +53,11 @@ const YarnTab = () => {
           <Table hover className="mb-0">
             <thead className="bg-light">
               <tr>
-                <th>Count</th>
-                <th>Category</th>
-                <th>Bags in Stock</th>
-                <th>Quantity (kg)</th>
+                <th className="text-center">Name</th>
+                <th className="text-center">Count</th>
+                <th className="text-center">Category</th>
+                <th className="text-center">Bags in Stock</th>
+                <th className="text-center">Balance (kg)</th>
                 <th className="text-end">Actions</th>
               </tr>
             </thead>
@@ -94,14 +94,13 @@ const YarnTab = () => {
           </Table>
         </div>
       </Card>
-
       <YarnModal
         show={showModal}
         onHide={closeModal}
+        getAll={getAll}
         editingYarn={editingYarn}
       />
     </>
   );
 };
-
 export default YarnTab;

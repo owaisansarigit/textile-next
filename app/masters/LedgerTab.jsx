@@ -6,13 +6,7 @@ import textileDB from "../../db/textileDB";
 import LedgerModal from "./LedgerModal";
 import LedgerTableRow from "./LedgerTableRow";
 
-const LedgerTab = () => {
-  const getAll = async () => {
-    const res = await fetch("/api/wledgers");
-    // .then((res) => res.json());
-    console.log(res);
-  };
-  getAll();
+const LedgerTab = () => { 
 
   const groups = useLiveQuery(() => textileDB.groups.toArray(), [], []);
   const ledgers = useLiveQuery(() => textileDB.wLedgers.toArray(), [], []);

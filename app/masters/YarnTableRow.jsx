@@ -1,18 +1,14 @@
-"use client"
-import { Button, Badge } from "react-bootstrap";
-
+"use client";
+import { Button } from "react-bootstrap";
 const YarnTableRow = ({ yarn, onEdit, onDelete }) => {
   return (
     <tr>
-      <td className="fw-medium align-middle">{yarn.count}</td>
-      <td className="align-middle">{yarn.category}</td>
-      <td className="align-middle">
-        <Badge bg="info" pill>
-          {yarn.bagsStock || 0} bags
-        </Badge>
-      </td>
-      <td className="align-middle">{yarn.looseStock || 0} kg loose</td>
-      <td className="text-end align-middle">
+      <td className="text-center">{yarn.name}</td>
+      <td className="text-center">{yarn.count}</td>
+      <td className="text-center">{yarn.category}</td>
+      <td className="text-center">{yarn.stockBags || 0} bags</td>
+      <td className="text-center">{yarn.stockWeight || 0} kg loose</td>
+      <td className="text-end">
         <Button
           variant="outline-primary"
           className="me-2"
@@ -22,9 +18,10 @@ const YarnTableRow = ({ yarn, onEdit, onDelete }) => {
           Edit
         </Button>
         <Button
+          // disabled
           variant="outline-danger"
           size="sm"
-          onClick={() => onDelete(yarn.id)}
+          onClick={() => onDelete(yarn._id)}
         >
           Delete
         </Button>

@@ -31,123 +31,18 @@ const data = [
             "address": "Bhiwandi, Maharashtra"
         },
         "status": "active"
-    },
-    {
-        "name": "Mahesh Textile",
-        "alias": "MT-W",
-        "group": "695fbc98671a96f61c0a005c",
-        "opYarnBalance": 200,
-        "opYarnBalanceDate": "2024-04-01T00:00:00.000Z",
-        "currentYarnBalance": 160,
-        "contact": {
-            "phone": "9123456789",
-            "address": "Ichalkaranji, Maharashtra"
-        },
-        "status": "active"
-    },
-    {
-        "name": "Omkar Looms",
-        "alias": "OML",
-        "group": "695fbc98671a96f61c0a005c",
-        "opYarnBalance": 50,
-        "opYarnBalanceDate": "2024-04-01T00:00:00.000Z",
-        "currentYarnBalance": 20,
-        "contact": {
-            "phone": "9012345678",
-            "address": "Malegaon, Maharashtra"
-        },
-        "status": "active"
-    },
-    {
-        "name": "Shiv Shakti Weaving",
-        "alias": "SSW",
-        "group": "695fbc98671a96f61c0a005c",
-        "opYarnBalance": 300,
-        "opYarnBalanceDate": "2024-04-01T00:00:00.000Z",
-        "currentYarnBalance": 240,
-        "contact": {
-            "phone": "9988776655",
-            "email": "shivshakti@loom.com",
-            "address": "Varanasi, UP"
-        },
-        "status": "active"
-    },
-    {
-        "name": "Patel Weavers",
-        "alias": "PW-05",
-        "group": "695fbc98671a96f61c0a005c",
-        "opYarnBalance": 90,
-        "opYarnBalanceDate": "2024-04-01T00:00:00.000Z",
-        "currentYarnBalance": 90,
-        "contact": {
-            "phone": "9090909090",
-            "address": "Surendranagar, Gujarat"
-        },
-        "status": "inactive"
-    },
-    {
-        "name": "Kiran Powerloom",
-        "alias": "KPL",
-        "group": "695fbc98671a96f61c0a005c",
-        "opYarnBalance": 140,
-        "opYarnBalanceDate": "2024-04-01T00:00:00.000Z",
-        "currentYarnBalance": 100,
-        "contact": {
-            "phone": "9555666777",
-            "address": "Erode, Tamil Nadu"
-        },
-        "status": "active"
-    },
-    {
-        "name": "Sai Nath Weaving",
-        "alias": "SNW",
-        "group": "695fbc98671a96f61c0a005c",
-        "opYarnBalance": 60,
-        "opYarnBalanceDate": "2024-04-01T00:00:00.000Z",
-        "currentYarnBalance": 10,
-        "contact": {
-            "phone": "9444333222",
-            "address": "Solapur, Maharashtra"
-        },
-        "status": "suspended"
-    },
-    {
-        "name": "Vijay Textiles",
-        "alias": "VT-W",
-        "group": "695fbc98671a96f61c0a005c",
-        "opYarnBalance": 180,
-        "opYarnBalanceDate": "2024-04-01T00:00:00.000Z",
-        "currentYarnBalance": 155,
-        "contact": {
-            "phone": "9333444555",
-            "email": "vijay@textiles.com",
-            "address": "Coimbatore, Tamil Nadu"
-        },
-        "status": "active"
-    },
-    {
-        "name": "Ganesh Handloom",
-        "alias": "GH-10",
-        "group": "695fbc98671a96f61c0a005c",
-        "opYarnBalance": 40,
-        "opYarnBalanceDate": "2024-04-01T00:00:00.000Z",
-        "currentYarnBalance": 40,
-        "contact": {
-            "phone": "9887766554",
-            "address": "Chanderi, MP"
-        },
-        "status": "active"
     }
 ]
 
-export async function GET() {
+const GET = async () => {
     await connectDB();
+    // data.forEach(async (d) => WLedger.create(d))
     const ledgers = await WLedger.find().populate("group")
     ledgers.forEach(g => console.log(`   • ${g.name} →  ${g.group.name}`))
     return NextResponse.json(ledgers);
 }
 
-export async function POST(req) {
+const POST = async (req) => {
     await connectDB();
 
     const body = await req.json();
@@ -159,3 +54,5 @@ export async function POST(req) {
 
     return NextResponse.json(ledger, { status: 201 });
 }
+
+export { GET, POST };
