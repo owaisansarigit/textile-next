@@ -1,15 +1,22 @@
-"use client"
-import React, { useState } from "react";
-import { useLiveQuery } from "dexie-react-hooks";
+"use client";
+import { useEffect, useState } from "react";
 import { Card, Button, Table } from "react-bootstrap";
-import textileDB from "../../db/textileDB";
 import GroupModal from "./GroupModal";
-import { groupService } from "../../db/dbServices";
-
 const GroupTab = () => {
-  const groups = useLiveQuery(() => textileDB.groups.toArray()) || [];
+  const [groups, setgroups] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingGroup, setEditingGroup] = useState(null);
+
+  const getAll = async () => {
+    try {
+      const res = await fetch("/api/groups");
+      const data = await res.json();
+      setgroups(data?.data || []);
+    } catch (error) {}
+  };
+  useEffect(() => {
+    getAll();
+  }, []);
 
   const handleEdit = (group) => {
     setEditingGroup(group);
@@ -28,7 +35,12 @@ const GroupTab = () => {
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this group?")) {
-      await groupService.delete(id);
+      try {
+        const res = await fetch(`/api/groups/${id}`, { method: "DELETE" });
+      } catch (error) {
+      } finally {
+        getAll();
+      }
     }
   };
 
@@ -66,7 +78,7 @@ const GroupTab = () => {
                     <Button
                       variant="outline-danger"
                       size="sm"
-                      onClick={() => handleDelete(g.id)}
+                      onClick={() => handleDelete(g._id)}
                     >
                       Delete
                     </Button>
@@ -86,6 +98,7 @@ const GroupTab = () => {
 
       <GroupModal
         show={showModal}
+        getAll={getAll}
         onHide={closeModal}
         editingGroup={editingGroup}
       />

@@ -1,18 +1,65 @@
 "use client";
-import { useState, useMemo } from "react";
-import { useLiveQuery } from "dexie-react-hooks";
+
+import { useState, useMemo, useEffect } from "react";
 import { Card, Button, Table, Spinner } from "react-bootstrap";
-import textileDB from "../../db/textileDB";
 import LedgerModal from "./LedgerModal";
 import LedgerTableRow from "./LedgerTableRow";
 
-const LedgerTab = () => { 
-
-  const groups = useLiveQuery(() => textileDB.groups.toArray(), [], []);
-  const ledgers = useLiveQuery(() => textileDB.wLedgers.toArray(), [], []);
-
+const LedgerTab = () => {
+  const [wledgers, setWledgers] = useState([]);
+  const [groups, setGroups] = useState([]);
+  const [yarns, setYarns] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingLedger, setEditingLedger] = useState(null);
+
+  const getAll = async () => {
+    try {
+      const res = await fetch("/api/wledgers");
+      const data = await res.json();
+      setWledgers(data?.data || []);
+    } catch (error) {
+      console.error("Failed to fetch ledgers:", error);
+    }
+  };
+
+  const getGroups = async () => {
+    try {
+      const res = await fetch("/api/groups");
+      const data = await res.json();
+      setGroups(data?.data || []);
+    } catch (error) {
+      console.error("Failed to fetch groups:", error);
+    }
+  };
+
+  const getYarns = async () => {
+    try {
+      const res = await fetch("/api/yarn");
+      const data = await res.json();      
+      setYarns(data || []);
+    } catch (error) {
+      console.error("Failed to fetch groups:", error);
+    }
+  };
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      await Promise.all([getAll(), getGroups(), getYarns()]);
+      setLoading(false);
+    };
+
+    loadData();
+  }, []);
+
+  const groupMap = useMemo(() => {
+    const map = {};
+    groups.forEach((g) => {
+      map[g._id] = g.name;
+    });
+    return map;
+  }, [groups]);
 
   const openEdit = (ledger) => {
     setEditingLedger(ledger);
@@ -27,27 +74,20 @@ const LedgerTab = () => {
   const closeModal = () => {
     setShowModal(false);
     setEditingLedger(null);
+    getAll();
   };
 
   const deleteLedger = async (id) => {
-    if (window.confirm("Are you sure you want to delete this ledger?")) {
-      try {
-        await textileDB.wLedgers.delete(id);
-      } catch (err) {
-        alert("Failed to delete ledger. It may be in use.");
-      }
+    if (!window.confirm("Are you sure you want to delete this ledger?")) return;
+
+    try {
+      await fetch(`/api/wledgers/${id}`, { method: "DELETE" });
+      setWledgers((prev) => prev.filter((l) => l._id !== id));
+    } catch (error) {
+      console.error("Delete failed:", error);
+      alert("Failed to delete ledger.");
     }
   };
-
-  const groupMap = useMemo(() => {
-    const map = {};
-    groups.forEach((g) => {
-      map[g.id] = g.name;
-    });
-    return map;
-  }, [groups]);
-
-  const isLoading = groups === undefined || ledgers === undefined;
 
   return (
     <>
@@ -71,19 +111,24 @@ const LedgerTab = () => {
                 <th className="text-end">Actions</th>
               </tr>
             </thead>
+
             <tbody>
-              {isLoading ? (
+              {loading ? (
                 <tr>
                   <td colSpan="6" className="text-center py-4">
                     <Spinner animation="border" size="sm" /> Loading ledgers...
                   </td>
                 </tr>
-              ) : ledgers.length > 0 ? (
-                ledgers.map((ledger) => (
+              ) : wledgers.length > 0 ? (
+                wledgers.map((ledger) => (
                   <LedgerTableRow
-                    key={ledger.id}
+                    key={ledger._id}
                     ledger={ledger}
-                    groupName={groupMap[ledger.groupId] || "N/A"}
+                    groupName={
+                      groupMap[ledger?.group?._id] ||
+                      ledger?.group?.name ||
+                      "N/A"
+                    }
                     onEdit={openEdit}
                     onDelete={deleteLedger}
                   />
@@ -109,6 +154,7 @@ const LedgerTab = () => {
         onHide={closeModal}
         editingLedger={editingLedger}
         groups={groups}
+        yarns={yarns}
       />
     </>
   );

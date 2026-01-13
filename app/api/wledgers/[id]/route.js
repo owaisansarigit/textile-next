@@ -39,20 +39,15 @@ export async function PUT(req, { params }) {
     return NextResponse.json(updated);
 }
 
-/**
- * DELETE weaving ledger
- */
 export async function DELETE(req, { params }) {
     await connectDB();
-
-    const deleted = await WLedger.findByIdAndDelete(params.id);
-
+    const { id } = await params
+    const deleted = await WLedger.findByIdAndDelete(id);
     if (!deleted) {
         return NextResponse.json(
             { message: "Ledger not found" },
             { status: 404 }
         );
     }
-
     return NextResponse.json({ success: true });
 }

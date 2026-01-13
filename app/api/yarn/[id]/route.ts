@@ -38,7 +38,7 @@ export async function PUT(req: Request, { params }: Params) {
   try {
     await connectDB();
     const { id } = await params;
-    const body = await req.json();
+    const body = await req.json();    
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ error: "Invalid yarn ID" }, { status: 400 });
     }
@@ -62,7 +62,6 @@ export async function DELETE(req: Request, { params }: Params) {
   try {
     await connectDB();
     const { id } = await params;
-    const body = await req.json();
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ error: "Invalid yarn ID" }, { status: 400 });
     }

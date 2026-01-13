@@ -1,139 +1,174 @@
-"use client"
-import React, { useState, useEffect } from "react";
+"use client";
+import { useState, useEffect } from "react";
 import { Modal, Button, Form, Row, Col } from "react-bootstrap";
 import { ledgerService } from "../../db/dbServices";
 
-const LedgerModal = ({ show, onHide, editingLedger, groups }) => {
-  const [form, setForm] = useState({
-    name: "",
-    alias: "",
-    groupId: "",
-    opYarnBalance: 0,
-    opYarnBalanceDate: new Date().toISOString().split("T")[0],
-  });  
+const emptyForm = {
+  name: "",
+  alias: "",
+  group: "",
+  openingYarnBalance: [],
+};
+
+const emptyYarnRow = {
+  yarn: "",
+  quantityKg: 0,
+  openingDate: new Date().toISOString().split("T")[0],
+};
+
+const LedgerModal = ({ show, onHide, editingLedger, groups, yarns }) => {
+  const [form, setForm] = useState(emptyForm);
   useEffect(() => {
-    if (editingLedger) {
-      setForm(editingLedger);
-    } else {
-      setForm({
-        name: "",
-        alias: "",
-        groupId: "",
-        opYarnBalance: 0,
-        opYarnBalanceDate: new Date().toISOString().split("T")[0],
-      });
-    }
+    setForm(editingLedger || emptyForm);
   }, [editingLedger, show]);
 
-  const handleSave = async () => {
-    const finalForm = {
+  const updateField = (key, value) => setForm((f) => ({ ...f, [key]: value }));
+
+  const updateYarn = (i, key, value) => {
+    const list = [...form.openingYarnBalance];
+    list[i] = { ...list[i], [key]: value };
+    updateField("openingYarnBalance", list);
+  };
+
+  const addYarn = () =>
+    updateField("openingYarnBalance", [
+      ...form.openingYarnBalance,
+      emptyYarnRow,
+    ]);
+
+  const removeYarn = (i) =>
+    updateField(
+      "openingYarnBalance",
+      form.openingYarnBalance.filter((_, idx) => idx !== i)
+    );
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    const payload = {
       ...form,
       alias: form.alias || form.name.trim(),
     };
-    if (editingLedger) {
-      await ledgerService.update(editingLedger.id, finalForm);
-    } else {
-      await ledgerService.create(finalForm);
+    try {
+      console.log(form);
+      await fetch(
+        editingLedger ? `/api/wledgers/${editingLedger._id}` : "/api/wledgers",
+        {
+          method: editingLedger ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+      onHide();
+      setForm(emptyForm);
+      getAll();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save ledger");
+    } finally {
+      setLoading(false);
     }
-    onHide();
   };
 
   return (
-    <Modal show={show} onHide={onHide} size="md" centered>
+    <Modal show={show} onHide={onHide} centered>
       <Modal.Header closeButton>
         <Modal.Title>
-          {editingLedger ? "Edit Ledger" : "Create New Weaver Ledger"}
+          {editingLedger ? "Edit Ledger" : "Create Weaver Ledger"}
         </Modal.Title>
       </Modal.Header>
+
       <Modal.Body>
         <Form>
           <Row>
             <Col md={6}>
-              <Form.Group className="mb-3">
-                <Form.Label>Ledger Name *</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="Enter ledger name"
-                  required
-                />
-              </Form.Group>
+              <Form.Control
+                placeholder="Ledger Name"
+                value={form.name}
+                onChange={(e) => updateField("name", e.target.value)}
+              />
             </Col>
             <Col md={6}>
-              <Form.Group className="mb-3">
-                <Form.Label>Alias (optional)</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={form.alias}
-                  onChange={(e) => setForm({ ...form, alias: e.target.value })}
-                  placeholder="Auto-filled from name"
-                />
-                <Form.Text className="text-muted">
-                  Leave empty to use Ledger Name as alias
-                </Form.Text>
-              </Form.Group>
+              <Form.Control
+                placeholder="Alias (optional)"
+                value={form.alias}
+                onChange={(e) => updateField("alias", e.target.value)}
+              />
             </Col>
           </Row>
 
-          <Form.Group className="mb-3">
-            <Form.Label>Under Group *</Form.Label>
-            <Form.Select
-              value={form.groupId}
-              onChange={(e) => setForm({ ...form, groupId: e.target.value })}
-              required
-            >
-              <option value="">Select a group...</option>
-              {groups.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name}
-                </option>
-              ))}
-            </Form.Select>
-          </Form.Group>
+          <Form.Select
+            className="mt-3"
+            value={form.group}
+            onChange={(e) => updateField("group", e.target.value)}
+          >
+            <option value="">Select Group</option>
+            {groups.map((g) => (
+              <option key={g._id} value={g._id}>
+                {g.name}
+              </option>
+            ))}
+          </Form.Select>
 
-          <Row>
-            <Col md={6}>
-              <Form.Group className="mb-3">
-                <Form.Label>Opening Yarn Balance (kg)</Form.Label>
+          <hr />
+
+          <h6>Opening Yarn Balances</h6>
+
+          {form.openingYarnBalance.map((y, i) => (
+            <Row key={i} className="mb-2">
+              <Col md={4}>
+                <Form.Select
+                  value={y.yarn}
+                  onChange={(e) => updateYarn(i, "yarn", e.target.value)}
+                >
+                  <option value="">Yarn</option>
+                  {yarns.map((yr) => (
+                    <option key={yr._id} value={yr._id}>
+                      {yr.name}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Col>
+
+              <Col md={3}>
                 <Form.Control
                   type="number"
-                  min="0"
-                  step="0.01"
-                  value={form.opYarnBalance}
+                  placeholder="Kg"
+                  value={y.quantityKg}
                   onChange={(e) =>
-                    setForm({
-                      ...form,
-                      opYarnBalance: Number(e.target.value) || 0,
-                    })
+                    updateYarn(i, "quantityKg", +e.target.value || 0)
                   }
                 />
-              </Form.Group>
-            </Col>
-            <Col md={6}>
-              <Form.Group className="mb-3">
-                <Form.Label>As On Date</Form.Label>
+              </Col>
+
+              <Col md={3}>
                 <Form.Control
                   type="date"
-                  value={form.opYarnBalanceDate}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      opYarnBalanceDate: e.target.value,
-                    })
-                  }
+                  value={y.openingDate}
+                  onChange={(e) => updateYarn(i, "openingDate", e.target.value)}
                 />
-              </Form.Group>
-            </Col>
-          </Row>
+              </Col>
+
+              <Col md={2}>
+                <Button variant="outline-danger" onClick={() => removeYarn(i)}>
+                  ✕
+                </Button>
+              </Col>
+            </Row>
+          ))}
+
+          <Button size="sm" variant="outline-primary" onClick={addYarn}>
+            + Add Yarn
+          </Button>
         </Form>
       </Modal.Body>
+
       <Modal.Footer>
         <Button variant="secondary" onClick={onHide}>
           Cancel
         </Button>
         <Button variant="primary" onClick={handleSave}>
-          {editingLedger ? "Update" : "Create"} Ledger
+          {editingLedger ? "Update" : "Create"}
         </Button>
       </Modal.Footer>
     </Modal>

@@ -1,7 +1,13 @@
-"use client"
+"use client";
 import { Button } from "react-bootstrap";
 const LedgerTableRow = ({ ledger, groupName, onEdit, onDelete }) => {
-  const { id, name, alias, opYarnBalance, currentYarnBalance = 0 } = ledger;  
+  const {
+    id: _id,
+    name,
+    alias,
+    opYarnBalance,
+    currentYarnBalance = 0,
+  } = ledger;
   return (
     <tr key={id}>
       <td>{name}</td>
@@ -26,7 +32,11 @@ const LedgerTableRow = ({ ledger, groupName, onEdit, onDelete }) => {
         >
           Edit
         </Button>
-        <Button variant="outline-danger" size="sm" onClick={() => onDelete(id)}>
+        <Button
+          variant="outline-danger"
+          size="sm"
+          onClick={() => onDelete(ledger._id)}
+        >
           Delete
         </Button>
       </td>

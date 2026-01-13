@@ -1,93 +1,77 @@
-import mongoose from 'mongoose';
-const MONGODB_URI = process.env.MONGODB_URI;
-if (!MONGODB_URI) {
-    throw new Error('Please define the MONGODB_URI environment variable');
+// import mongoose from "mongoose";
+// const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
+// if (!MONGO_URI) {
+//   console.error("[Mongo] ❌ MONGO_URI missing");
+//   throw new Error("Please define MONGO_URI in .env");
+// }
+// let cached = global._mongoose;
+// if (!cached) {
+//   console.log("[Mongo] 🆕 Creating global mongoose cache");
+//   cached = global._mongoose = {
+//     conn: null,
+//     promise: null,
+//   };
+// } else {
+//   console.log("[Mongo] ♻️ Using existing global mongoose cache");
+// }
+// export async function connectDB() {
+//   if (cached.conn) {
+//     console.log("[Mongo] ✅ Reusing existing MongoDB connection");
+//     return cached.conn;
+//   }
+//   if (cached.promise) {
+//     console.log("[Mongo] ⏳ Awaiting existing connection promise");
+//   }
+//   if (!cached.promise) {
+//     console.log("[Mongo] 🔌 Creating new MongoDB connection...");
+//     cached.promise = mongoose.connect(MONGO_URI, {
+//       dbName: "textile",
+//       maxPoolSize: 10,
+//       bufferCommands: false,
+//       serverSelectionTimeoutMS: 3000,
+//     });
+//   }
+//   cached.conn = await cached.promise;
+//   mongoose.connection.once("open", () => {
+//     console.log("[Mongo] 🚀 MongoDB connected successfully");
+//   });
+//   return cached.conn;
+// }
+import mongoose from "mongoose";
+
+const URI = process.env.MONGO_URI || process.env.MONGODB_URI;
+if (!URI) throw new Error("MONGO_URI missing");
+
+let cache = global._mongoose || (global._mongoose = { conn: null, promise: null });
+
+export async function connectDB() {
+    if (cache.conn) {
+        console.log("[Mongo] ♻️ reuse connection");
+        return cache.conn;
+    }
+
+    console.log("[Mongo] 🔌 first connection");
+    cache.promise ||= mongoose.connect(URI, {
+        dbName: "textile",
+        maxPoolSize: 10,
+        serverSelectionTimeoutMS: 3000,
+    });
+
+    cache.conn = await cache.promise;
+
+    // log collections + counts
+    const cols = await mongoose.connection.db.listCollections().toArray();
+    console.log(
+        "[Mongo] 📊 collections:",
+        cols.map(c => c.name)
+    );
+
+    for (const c of cols) {
+        const count = await mongoose.connection.db
+            .collection(c.name)
+            .countDocuments();
+        console.log(`   • ${c.name}: ${count}`);
+    }
+
+    return cache.conn;
 }
-
-const globalWithMongo = global;
-globalWithMongo.mongoose = globalWithMongo.mongoose || {};
-
-let cached = globalWithMongo.mongoose;
-
-async function connectDB() {
-    // Return existing connection if available and healthy
-    if (cached.conn && mongoose.connection.readyState === 1) {
-        console.log('✅ Using existing MongoDB connection');
-        return cached.conn;
-    }
-
-    // If connection exists but is not ready, try to reconnect
-    if (cached.conn && mongoose.connection.readyState !== 1) {
-        console.log('🔄 MongoDB connection not ready, reconnecting...');
-        try {
-            await mongoose.disconnect();
-        } catch (err) {
-            console.log('Error disconnecting:', err.message);
-        }
-        cached.conn = null;
-        cached.promise = null;
-    }
-
-    if (!cached.promise) {
-        const opts = {
-            bufferCommands: true,
-            maxPoolSize: 10,
-            serverSelectionTimeoutMS: 5000,
-            socketTimeoutMS: 45000,
-            family: 4,
-        };
-
-        console.log('🔌 Creating new MongoDB connection...');
-        cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
-            console.log('✅ MongoDB connected successfully');
-            return mongoose;
-        }).catch((err) => {
-            console.error('❌ MongoDB connection error:', err);
-            cached.promise = null;
-            throw err;
-        });
-    }
-
-    try {
-        cached.conn = await cached.promise;
-
-        // Setup connection event listeners
-        mongoose.connection.on('connected', () => {
-            console.log('✅ MongoDB connected');
-        });
-
-        mongoose.connection.on('error', (err) => {
-            console.error('❌ MongoDB connection error:', err);
-        });
-
-        mongoose.connection.on('disconnected', () => {
-            console.log('⚠️ MongoDB disconnected');
-        });
-
-        // Handle process termination
-        process.on('SIGINT', async () => {
-            await mongoose.connection.close();
-            process.exit(0);
-        });
-
-    } catch (error) {
-        cached.promise = null;
-        console.error('❌ Failed to connect to MongoDB:', error);
-        throw error;
-    }
-
-    return cached.conn;
-}
-
-
-connectDB().catch(console.error);
-
-
-setInterval(() => {
-    if (mongoose.connection.readyState !== 1) {
-        console.log('🔄 Attempting to reconnect to MongoDB...');
-        connectDB().catch(console.error);
-    }
-}, 10000);
-
-export default connectDB;

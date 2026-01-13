@@ -1,20 +1,20 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Modal, Button, Form, Row, Col } from "react-bootstrap";
 
 const categories = ["Cotton", "Rayon", "CP", "Roto"];
 const counts = ["40", "42", "46", "60", "80"];
 
+const emptyForm = {
+  name: "",
+  count: "",
+  category: "",
+  bagWeight: 0,
+  stockBags: 0,
+  looseStock: 0,
+};
+
 const YarnModal = ({ show, onHide, editingYarn, getAll }) => {
-  const emptyForm = {
-    name: "",
-    count: "",
-    category: "",
-    bagWeight: 0,
-    stockBags: 0,
-    looseStock: 0.0,
-    stockWeight: 0,
-  };
   const [formData, setFormData] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
 
@@ -34,41 +34,36 @@ const YarnModal = ({ show, onHide, editingYarn, getAll }) => {
   }, [editingYarn]);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value === "" ? "" : Number(value) || value,
+    }));
   };
-
-  useEffect(() => {
-    setFormData({
-      ...formData,
-      stockWeight:
-        Number(formData.looseStock || 0) +
-        Number(formData.bagWeight || 0) * Number(formData.stockBags || 0),
-    });
-  }, [formData.bagWeight, formData.stockBags]);
+  
+  const stockWeight = useMemo(() => {
+    return (
+      Number(formData.looseStock || 0) +
+      Number(formData.bagWeight || 0) * Number(formData.stockBags || 0)
+    );
+  }, [formData]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const url = editingYarn ? `/api/yarn/${editingYarn._id}` : "/api/yarn";
-      const method = editingYarn ? "PUT" : "POST";
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
+      await fetch(editingYarn ? `/api/yarn/${editingYarn._id}` : "/api/yarn", {
+        method: editingYarn ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...formData, stockWeight }),
       });
-      if (!res.ok) {
-        throw new Error("Request failed");
-      }
       onHide();
       setFormData(emptyForm);
+      getAll();
     } catch (err) {
       console.error(err);
       alert("Failed to save yarn master");
     } finally {
-      getAll();
       setLoading(false);
     }
   };
@@ -78,8 +73,10 @@ const YarnModal = ({ show, onHide, editingYarn, getAll }) => {
       <Modal.Header closeButton>
         <Modal.Title>{editingYarn ? "Edit" : "Add"} Yarn Master</Modal.Title>
       </Modal.Header>
+
       <Form onSubmit={handleSubmit}>
         <Modal.Body>
+          {/* Bag Name */}
           <Row>
             <Form.Group className="mb-3">
               <Form.Label>
@@ -94,6 +91,8 @@ const YarnModal = ({ show, onHide, editingYarn, getAll }) => {
               />
             </Form.Group>
           </Row>
+
+          {/* Count & Category */}
           <Row>
             <Col md={6}>
               <Form.Group className="mb-3">
@@ -115,6 +114,7 @@ const YarnModal = ({ show, onHide, editingYarn, getAll }) => {
                 </Form.Select>
               </Form.Group>
             </Col>
+
             <Col md={6}>
               <Form.Group className="mb-3">
                 <Form.Label>
@@ -136,6 +136,8 @@ const YarnModal = ({ show, onHide, editingYarn, getAll }) => {
               </Form.Group>
             </Col>
           </Row>
+
+          {/* Bag Weight & Stock Bags */}
           <Row>
             <Col md={6}>
               <Form.Group className="mb-3">
@@ -152,6 +154,7 @@ const YarnModal = ({ show, onHide, editingYarn, getAll }) => {
                 />
               </Form.Group>
             </Col>
+
             <Col md={6}>
               <Form.Group className="mb-3">
                 <Form.Label>Stock Bags</Form.Label>
@@ -165,6 +168,7 @@ const YarnModal = ({ show, onHide, editingYarn, getAll }) => {
             </Col>
           </Row>
 
+          {/* Loose & Total Stock */}
           <Row>
             <Col md={6}>
               <Form.Group className="mb-3">
@@ -178,6 +182,7 @@ const YarnModal = ({ show, onHide, editingYarn, getAll }) => {
                 />
               </Form.Group>
             </Col>
+
             <Col md={6}>
               <Form.Group className="mb-3">
                 <Form.Label>Total Weight</Form.Label>
@@ -185,18 +190,13 @@ const YarnModal = ({ show, onHide, editingYarn, getAll }) => {
                   disabled
                   type="number"
                   step="0.01"
-                  name="looseStock"
-                  value={
-                    Number(formData.looseStock || 0) +
-                    Number(formData.bagWeight || 0) *
-                      Number(formData.stockBags || 0)
-                  }
-                  onChange={handleChange}
+                  value={stockWeight.toFixed(2)}
                 />
               </Form.Group>
             </Col>
           </Row>
         </Modal.Body>
+
         <Modal.Footer>
           <Button variant="secondary" onClick={onHide}>
             Cancel

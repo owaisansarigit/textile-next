@@ -1,9 +1,9 @@
-"use client"
+"use client";
 import { useState, useEffect, useRef } from "react";
 import { Modal, Button, Form, Alert } from "react-bootstrap";
 import { groupService } from "../../db/dbServices";
 
-const GroupModal = ({ show, onHide, editingGroup }) => {
+const GroupModal = ({ show, onHide, editingGroup, getAll }) => {
   const [name, setName] = useState("");
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,15 +36,23 @@ const GroupModal = ({ show, onHide, editingGroup }) => {
     setIsSubmitting(true);
     try {
       if (editingGroup) {
-        await groupService.update(editingGroup.id, name);
+        const res = await fetch(`/api/groups/${editingGroup?._id}`, {
+          method: "PUT",
+        });
+        const data = await res.json();
       } else {
-        await groupService.create(name);
+        const res = await fetch(`/api/groups`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name }),
+        });
       }
       onHide();
     } catch (err) {
       console.error(err);
       setErrors({ submit: "Failed to save group. Please try again." });
     } finally {
+      getAll();
       setIsSubmitting(false);
     }
   };

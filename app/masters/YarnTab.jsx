@@ -3,23 +3,24 @@ import { useEffect, useState } from "react";
 import { Card, Button, Table, Spinner } from "react-bootstrap";
 import YarnModal from "./YarnModal";
 import YarnTableRow from "./YarnTableRow";
-import { yarnService } from "../../db/dbServices";
+
 const YarnTab = () => {
   const [yarns, setYarns] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingYarn, setEditingYarn] = useState(null);
   const getAll = async () => {
     const res = await fetch("/api/yarn").then((res) => res.json());
-    console.log(res);
     setYarns(res);
   };
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this yarn master?")) {
       try {
-        const res = await fetch(`/api/yarn/${id}`, "DELETE");
+        const res = await fetch(`/api/yarn/${id}`, { method: "DELETE" });
       } catch (err) {
         console.error(err);
         alert("Failed to delete yarn master");
+      } finally {
+        getAll();
       }
     }
   };

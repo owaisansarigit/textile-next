@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
-import connectDB from '@/lib/db/connect';
-import { Group } from '@/lib/db/models';
+import { connectDB } from '../../../lib/db/mongo';
+import { Group } from '../../../lib/db/models/groupModel';
 
-// GET single group by ID
 export async function GET(request, { params }) {
     try {
         await connectDB();
@@ -93,9 +92,8 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
     try {
         await connectDB();
-
-        const group = await Group.findById(params.id);
-
+        const { id } = await params;
+        const group = await Group.findById(id);
         if (!group) {
             return NextResponse.json(
                 { success: false, message: 'Group not found' },
@@ -103,9 +101,8 @@ export async function DELETE(request, { params }) {
             );
         }
 
-        // Check if group has any wLedgers
-        const { WLedger } = await import('@/lib/db/models');
-        const hasWLedgers = await WLedger.countDocuments({ group: params.id });
+        const { WLedger } = await import('../../../lib/db/models/wLedgerModel');
+        const hasWLedgers = await WLedger.countDocuments({ group: id });
 
         if (hasWLedgers > 0) {
             return NextResponse.json(
@@ -114,7 +111,7 @@ export async function DELETE(request, { params }) {
             );
         }
 
-        await Group.findByIdAndDelete(params.id);
+        await Group.findByIdAndDelete(id);
 
         return NextResponse.json({
             success: true,
