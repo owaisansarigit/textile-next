@@ -5,19 +5,18 @@ import { NextResponse } from "next/server";
 
 const GET = async () => {
     await connectDB();
-    const data = await WLedger.find().populate("group")
+    const data = await WLedger.find()
+        .populate('group')
+        .populate('openingYarnBalance.yarn')
+        .populate('currentYarnBalance.yarn');
     return NextResponse.json({ data });
 }
 
 const POST = async (req) => {
     await connectDB();
-    console.log("body")
     const body = await req.json();
-    
-
-    // const ledger = await WLedger.create(body);
-
-    // return NextResponse.json(ledger, { status: 201 });
+    const ledger = await WLedger.create(body);
+    return NextResponse.json(ledger, { status: 201 });
 }
 
 export { GET, POST };

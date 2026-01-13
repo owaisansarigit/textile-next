@@ -1,15 +1,9 @@
 "use client";
 import { Button } from "react-bootstrap";
 const LedgerTableRow = ({ ledger, groupName, onEdit, onDelete }) => {
-  const {
-    id: _id,
-    name,
-    alias,
-    opYarnBalance,
-    currentYarnBalance = 0,
-  } = ledger;
+  const { name, alias, opYarnBalance, currentYarnBalance = 0 } = ledger;
   return (
-    <tr key={id}>
+    <tr key={ledger._id}>
       <td>{name}</td>
       <td>
         <small className="text-muted">{alias || "—"}</small>

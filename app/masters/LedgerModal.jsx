@@ -1,47 +1,39 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Modal, Button, Form, Row, Col } from "react-bootstrap";
-import { ledgerService } from "../../db/dbServices";
-
 const emptyForm = {
   name: "",
   alias: "",
   group: "",
   openingYarnBalance: [],
 };
-
 const emptyYarnRow = {
   yarn: "",
   quantityKg: 0,
   openingDate: new Date().toISOString().split("T")[0],
 };
-
 const LedgerModal = ({ show, onHide, editingLedger, groups, yarns }) => {
   const [form, setForm] = useState(emptyForm);
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     setForm(editingLedger || emptyForm);
   }, [editingLedger, show]);
-
   const updateField = (key, value) => setForm((f) => ({ ...f, [key]: value }));
-
   const updateYarn = (i, key, value) => {
     const list = [...form.openingYarnBalance];
     list[i] = { ...list[i], [key]: value };
     updateField("openingYarnBalance", list);
   };
-
   const addYarn = () =>
     updateField("openingYarnBalance", [
       ...form.openingYarnBalance,
       emptyYarnRow,
     ]);
-
   const removeYarn = (i) =>
     updateField(
       "openingYarnBalance",
       form.openingYarnBalance.filter((_, idx) => idx !== i)
     );
-
   const handleSave = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -50,7 +42,6 @@ const LedgerModal = ({ show, onHide, editingLedger, groups, yarns }) => {
       alias: form.alias || form.name.trim(),
     };
     try {
-      console.log(form);
       await fetch(
         editingLedger ? `/api/wledgers/${editingLedger._id}` : "/api/wledgers",
         {
@@ -61,7 +52,6 @@ const LedgerModal = ({ show, onHide, editingLedger, groups, yarns }) => {
       );
       onHide();
       setForm(emptyForm);
-      getAll();
     } catch (err) {
       console.error(err);
       alert("Failed to save ledger");
