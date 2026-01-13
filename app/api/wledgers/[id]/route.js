@@ -1,20 +1,17 @@
 
-import { connectDB } from '../../../lib/db/mongo'
+import { connectDB } from '../../../lib/db/connect'
 import { WLedger } from "../../../lib/db/models/wLedgerModel";
 import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {
     await connectDB();
-
-    const ledger = await WLedger.findById(params.id).populate("group", "name");
-
+    const ledger = await WLedger.findById(params.id).populate("group");
     if (!ledger) {
         return NextResponse.json(
             { message: "Ledger not found" },
             { status: 404 }
         );
     }
-
     return NextResponse.json(ledger);
 }
 

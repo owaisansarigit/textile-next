@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "../../lib/db/mongo";
+import { connectDB } from "../../lib/db/connect";
 import { Yarn } from "../../lib/db/models/yarnModel";
 
 export async function GET() {

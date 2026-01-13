@@ -1,5 +1,5 @@
 import { AppProvider } from "./providers/AppProvider";
-import { connectDB } from "./lib/db/mongo";
+import { connectDB } from "./lib/db/connect";
 connectDB();
 
 import MainLayout from "./components/MainLayout";

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "../../../lib/db/mongo";
+import { connectDB } from "../../../lib/db/connect";
 import { Yarn } from "../../../lib/db/models/yarnModel";
 import mongoose from "mongoose";
 
@@ -38,7 +38,7 @@ export async function PUT(req: Request, { params }: Params) {
   try {
     await connectDB();
     const { id } = await params;
-    const body = await req.json();    
+    const body = await req.json();
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ error: "Invalid yarn ID" }, { status: 400 });
     }

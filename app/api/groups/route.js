@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { connectDB } from "../../lib/db/mongo";
+import { connectDB } from "../../lib/db/connect";
 import { Group } from '../../lib/db/models/groupModel';
 
 

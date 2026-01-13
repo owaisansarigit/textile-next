@@ -1,46 +1,66 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Modal, Button, Form, Row, Col } from "react-bootstrap";
+
+const categories = ["Cotton", "Viscose", "CP", "PC", "Roto"];
+const counts = [23, 40, 60, 80];
+
 const emptyForm = {
   name: "",
   alias: "",
   group: "",
   openingYarnBalance: [],
 };
+
 const emptyYarnRow = {
-  yarn: "",
+  category: "Cotton",
+  count: 60,
   quantityKg: 0,
   openingDate: new Date().toISOString().split("T")[0],
 };
-const LedgerModal = ({ show, onHide, editingLedger, groups, yarns }) => {
+
+const LedgerModal = ({ show, onHide, editingLedger, groups }) => {
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     setForm(editingLedger || emptyForm);
   }, [editingLedger, show]);
+
   const updateField = (key, value) => setForm((f) => ({ ...f, [key]: value }));
+
   const updateYarn = (i, key, value) => {
     const list = [...form.openingYarnBalance];
     list[i] = { ...list[i], [key]: value };
     updateField("openingYarnBalance", list);
   };
+
   const addYarn = () =>
     updateField("openingYarnBalance", [
       ...form.openingYarnBalance,
       emptyYarnRow,
     ]);
+
   const removeYarn = (i) =>
     updateField(
       "openingYarnBalance",
       form.openingYarnBalance.filter((_, idx) => idx !== i)
     );
+
   const handleSave = async (e) => {
     e.preventDefault();
     setLoading(true);
+
     const payload = {
       ...form,
       alias: form.alias || form.name.trim(),
+      openingYarnBalance: form.openingYarnBalance.map((item) => ({
+        ...item,
+        count: item.count ? Number(item.count) : null,
+        quantityKg: Number(item.quantityKg) || 0,
+      })),
     };
+
     try {
       await fetch(
         editingLedger ? `/api/wledgers/${editingLedger._id}` : "/api/wledgers",
@@ -105,22 +125,36 @@ const LedgerModal = ({ show, onHide, editingLedger, groups, yarns }) => {
           <h6>Opening Yarn Balances</h6>
 
           {form.openingYarnBalance.map((y, i) => (
-            <Row key={i} className="mb-2">
-              <Col md={4}>
+            <Row key={i} className="mb-2 align-items-center">
+              <Col md={3}>
                 <Form.Select
-                  value={y.yarn}
-                  onChange={(e) => updateYarn(i, "yarn", e.target.value)}
+                  value={y.category}
+                  onChange={(e) => updateYarn(i, "category", e.target.value)}
                 >
-                  <option value="">Yarn</option>
-                  {yarns.map((yr) => (
-                    <option key={yr._id} value={yr._id}>
-                      {yr.name}
+                  <option value="">Category</option>
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
                     </option>
                   ))}
                 </Form.Select>
               </Col>
 
               <Col md={3}>
+                <Form.Select
+                  value={y.count}
+                  onChange={(e) => updateYarn(i, "count", e.target.value)}
+                >
+                  <option value="">Count</option>
+                  {counts.map((cnt) => (
+                    <option key={cnt} value={cnt}>
+                      {cnt}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Col>
+
+              <Col md={2}>
                 <Form.Control
                   type="number"
                   placeholder="Kg"
@@ -128,6 +162,8 @@ const LedgerModal = ({ show, onHide, editingLedger, groups, yarns }) => {
                   onChange={(e) =>
                     updateYarn(i, "quantityKg", +e.target.value || 0)
                   }
+                  min="0"
+                  step="0.01"
                 />
               </Col>
 
@@ -139,15 +175,24 @@ const LedgerModal = ({ show, onHide, editingLedger, groups, yarns }) => {
                 />
               </Col>
 
-              <Col md={2}>
-                <Button variant="outline-danger" onClick={() => removeYarn(i)}>
+              <Col md={1}>
+                <Button
+                  variant="outline-danger"
+                  onClick={() => removeYarn(i)}
+                  size="sm"
+                >
                   ✕
                 </Button>
               </Col>
             </Row>
           ))}
 
-          <Button size="sm" variant="outline-primary" onClick={addYarn}>
+          <Button
+            size="sm"
+            variant="outline-primary"
+            onClick={addYarn}
+            className="mt-2"
+          >
             + Add Yarn
           </Button>
         </Form>
@@ -157,8 +202,8 @@ const LedgerModal = ({ show, onHide, editingLedger, groups, yarns }) => {
         <Button variant="secondary" onClick={onHide}>
           Cancel
         </Button>
-        <Button variant="primary" onClick={handleSave}>
-          {editingLedger ? "Update" : "Create"}
+        <Button variant="primary" onClick={handleSave} disabled={loading}>
+          {loading ? "Saving..." : editingLedger ? "Update" : "Create"}
         </Button>
       </Modal.Footer>
     </Modal>

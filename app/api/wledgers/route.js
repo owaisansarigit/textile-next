@@ -1,14 +1,11 @@
-import { connectDB } from "../../lib/db/mongo";
+import { connectDB } from "../../lib/db/connect";
 import { WLedger } from "../../lib/db/models/wLedgerModel";
 import { NextResponse } from "next/server";
 
 
 const GET = async () => {
     await connectDB();
-    const data = await WLedger.find()
-        .populate('group')
-        .populate('openingYarnBalance.yarn')
-        .populate('currentYarnBalance.yarn');
+    const data = await WLedger.find().populate('group')
     return NextResponse.json({ data });
 }
 
