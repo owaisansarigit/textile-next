@@ -17,22 +17,10 @@ export async function GET(req, { params }) {
 
 export async function PUT(req, { params }) {
     await connectDB();
-
     const body = await req.json();
-
-    const updated = await WLedger.findByIdAndUpdate(
-        params.id,
-        body,
-        { new: true, runValidators: true }
-    );
-
-    if (!updated) {
-        return NextResponse.json(
-            { message: "Ledger not found" },
-            { status: 404 }
-        );
-    }
-
+    const { id } = await params;
+    const updated = await WLedger.findByIdAndUpdate(id, body, { new: true, runValidators: true });
+    if (!updated) { return NextResponse.json({ message: "Ledger not found" }, { status: 404 }); }
     return NextResponse.json(updated);
 }
 

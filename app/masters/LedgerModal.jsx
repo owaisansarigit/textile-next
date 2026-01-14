@@ -22,25 +22,41 @@ const emptyYarnRow = {
 const LedgerModal = ({ show, onHide, editingLedger, groups }) => {
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
-
+  const [weaversGroup, setWeaversGroup] = useState(null);
   useEffect(() => {
-    setForm(editingLedger || emptyForm);
-  }, [editingLedger, show]);
+    if (groups && groups.length > 0) {
+      const foundWeaversGroup = groups.find(
+        (group) => group.name && group.name.toLowerCase() === "weavers"
+      );
+      setWeaversGroup(foundWeaversGroup);
+    } else {
+      setWeaversGroup(null);
+    }
+  }, [groups]);
+  useEffect(() => {
+    if (show) {
+      if (editingLedger) {
+        setForm(editingLedger);
+      } else {
+        setForm({
+          ...emptyForm,
+          group: weaversGroup ? weaversGroup._id : "",
+        });
+      }
+    }
+  }, [editingLedger, show, weaversGroup]);
 
   const updateField = (key, value) => setForm((f) => ({ ...f, [key]: value }));
-
   const updateYarn = (i, key, value) => {
     const list = [...form.openingYarnBalance];
     list[i] = { ...list[i], [key]: value };
     updateField("openingYarnBalance", list);
   };
-
   const addYarn = () =>
     updateField("openingYarnBalance", [
       ...form.openingYarnBalance,
       emptyYarnRow,
     ]);
-
   const removeYarn = (i) =>
     updateField(
       "openingYarnBalance",
@@ -49,6 +65,11 @@ const LedgerModal = ({ show, onHide, editingLedger, groups }) => {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    if (isCreating && !weaversGroup) {
+      alert("Weavers group not found. Please contact administrator.");
+      return;
+    }
+
     setLoading(true);
 
     const payload = {
@@ -80,11 +101,15 @@ const LedgerModal = ({ show, onHide, editingLedger, groups }) => {
     }
   };
 
+  const isCreating = !editingLedger;
+  const isWeaversGroup = form.group === (weaversGroup?._id || "");
+  const canEdit = isCreating || isWeaversGroup;
+
   return (
     <Modal show={show} onHide={onHide} centered>
       <Modal.Header closeButton>
         <Modal.Title>
-          {editingLedger ? "Edit Ledger" : "Create Weaver Ledger"}
+          {editingLedger ? "Edit Ledger" : "Create Weavers Ledger"}
         </Modal.Title>
       </Modal.Header>
 
@@ -96,6 +121,8 @@ const LedgerModal = ({ show, onHide, editingLedger, groups }) => {
                 placeholder="Ledger Name"
                 value={form.name}
                 onChange={(e) => updateField("name", e.target.value)}
+                disabled={!canEdit}
+                required
               />
             </Col>
             <Col md={6}>
@@ -103,6 +130,7 @@ const LedgerModal = ({ show, onHide, editingLedger, groups }) => {
                 placeholder="Alias (optional)"
                 value={form.alias}
                 onChange={(e) => updateField("alias", e.target.value)}
+                disabled={!canEdit}
               />
             </Col>
           </Row>
@@ -111,14 +139,40 @@ const LedgerModal = ({ show, onHide, editingLedger, groups }) => {
             className="mt-3"
             value={form.group}
             onChange={(e) => updateField("group", e.target.value)}
+            disabled={isCreating || !canEdit}
           >
-            <option value="">Select Group</option>
-            {groups.map((g) => (
-              <option key={g._id} value={g._id}>
-                {g.name}
-              </option>
-            ))}
+            {isCreating ? (
+              // For create mode: show Weavers group or loading message
+              weaversGroup ? (
+                <option value={weaversGroup._id}>{weaversGroup.name}</option>
+              ) : (
+                <option value="">Loading Weavers group...</option>
+              )
+            ) : (
+              // For edit mode: show all groups
+              <>
+                <option value="">Select Group</option>
+                {groups &&
+                  groups.map((g) => (
+                    <option key={g._id} value={g._id}>
+                      {g.name}
+                    </option>
+                  ))}
+              </>
+            )}
           </Form.Select>
+
+          {isCreating && !weaversGroup && (
+            <div className="text-danger small mt-2">
+              Weavers group not found. Cannot create ledger.
+            </div>
+          )}
+
+          {!isCreating && !isWeaversGroup && (
+            <div className="text-muted small mt-2">
+              Note: Only Weavers group ledgers can be edited
+            </div>
+          )}
 
           <hr />
 
@@ -130,6 +184,7 @@ const LedgerModal = ({ show, onHide, editingLedger, groups }) => {
                 <Form.Select
                   value={y.category}
                   onChange={(e) => updateYarn(i, "category", e.target.value)}
+                  disabled={!isCreating} // Balances only editable in create mode
                 >
                   <option value="">Category</option>
                   {categories.map((cat) => (
@@ -144,6 +199,7 @@ const LedgerModal = ({ show, onHide, editingLedger, groups }) => {
                 <Form.Select
                   value={y.count}
                   onChange={(e) => updateYarn(i, "count", e.target.value)}
+                  disabled={!isCreating} // Balances only editable in create mode
                 >
                   <option value="">Count</option>
                   {counts.map((cnt) => (
@@ -164,6 +220,7 @@ const LedgerModal = ({ show, onHide, editingLedger, groups }) => {
                   }
                   min="0"
                   step="0.01"
+                  disabled={!isCreating} // Balances only editable in create mode
                 />
               </Col>
 
@@ -172,6 +229,7 @@ const LedgerModal = ({ show, onHide, editingLedger, groups }) => {
                   type="date"
                   value={y.openingDate}
                   onChange={(e) => updateYarn(i, "openingDate", e.target.value)}
+                  disabled={!isCreating} // Balances only editable in create mode
                 />
               </Col>
 
@@ -180,6 +238,7 @@ const LedgerModal = ({ show, onHide, editingLedger, groups }) => {
                   variant="outline-danger"
                   onClick={() => removeYarn(i)}
                   size="sm"
+                  disabled={!isCreating} // Balances only editable in create mode
                 >
                   ✕
                 </Button>
@@ -192,6 +251,7 @@ const LedgerModal = ({ show, onHide, editingLedger, groups }) => {
             variant="outline-primary"
             onClick={addYarn}
             className="mt-2"
+            disabled={!isCreating} // Balances only editable in create mode
           >
             + Add Yarn
           </Button>
@@ -202,7 +262,16 @@ const LedgerModal = ({ show, onHide, editingLedger, groups }) => {
         <Button variant="secondary" onClick={onHide}>
           Cancel
         </Button>
-        <Button variant="primary" onClick={handleSave} disabled={loading}>
+        <Button
+          variant="primary"
+          onClick={handleSave}
+          disabled={
+            loading ||
+            !form.name.trim() ||
+            (isCreating && !weaversGroup) ||
+            (!isCreating && !isWeaversGroup)
+          }
+        >
           {loading ? "Saving..." : editingLedger ? "Update" : "Create"}
         </Button>
       </Modal.Footer>

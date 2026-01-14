@@ -36,7 +36,7 @@ const LedgerTab = () => {
   const getYarns = async () => {
     try {
       const res = await fetch("/api/yarn");
-      const data = await res.json();      
+      const data = await res.json();
       setYarns(data || []);
     } catch (error) {
       console.error("Failed to fetch groups:", error);
