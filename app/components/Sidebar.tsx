@@ -1,5 +1,4 @@
 "use client";
-
 import {
   Drawer,
   List,
@@ -25,12 +24,12 @@ const menu = [
   { text: "Pipe Received", icon: <ReceiptIcon />, path: "/addpipe" },
   { text: "Pipe Stock", icon: <InventoryIcon />, path: "/stockpipe" },
   { text: "Masters", icon: <PeopleIcon />, path: "/masters" },
+  { text: "Yarns", icon: <PeopleIcon />, path: "/Yarns" },
 ];
 
 export default function Sidebar() {
-  const { mobileOpen, toggleMobile } = useApp();
+  // const { mobileOpen, toggleMobile } = useApp();
   const pathname = usePathname();
-
   const drawer = (
     <div>
       <Toolbar />
@@ -63,8 +62,8 @@ export default function Sidebar() {
       {/* Mobile */}
       <Drawer
         variant="temporary"
-        open={mobileOpen}
-        onClose={toggleMobile}
+        // open={mobileOpen}
+        // onClose={toggleMobile}
         sx={{
           display: { xs: "block", md: "none" },
           "& .MuiDrawer-paper": { width: drawerWidth },
