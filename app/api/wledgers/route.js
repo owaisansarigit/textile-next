@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 
 const GET = async () => {
     await connectDB();
-    const data = await WLedger.find().populate('group')
+    const data = await WLedger.find().populate('group')    
     return NextResponse.json({ data });
 }
 

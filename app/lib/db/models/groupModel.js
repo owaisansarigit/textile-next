@@ -14,7 +14,7 @@ const groupSchema = new mongoose.Schema(
 groupSchema.index({ name: 1 });
 
 export const Group =
-    mongoose.models.Group || mongoose.model("Group", groupSchema);
+    mongoose.models.Group || mongoose.model('Group', groupSchema);
 
 
 

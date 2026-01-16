@@ -13,4 +13,6 @@ const yarnTransactionsSchema = new mongoose.Schema({
     timestamps: true
 });
 
-export const YarnTransactions = mongoose.model('YarnTransactions', yarnTransactionsSchema);
+export const YarnTransactions =
+    mongoose.models.YarnTransactions ||
+    mongoose.model('YarnTransactions', yarnTransactionsSchema);
