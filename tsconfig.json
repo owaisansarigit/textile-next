@@ -35,8 +35,11 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts",
-    "app/api/hello/route.js"
-, "app/layout.jsx"  ],
+    "app/api/hello/route.js",
+    "app/layout.jsx",
+    "app/components/TopBar.jsx",
+    "app/components/MainLayout.tsx"
+  ],
   "exclude": [
     "node_modules"
   ]

@@ -4,7 +4,7 @@ import { AppBar, Toolbar, IconButton, Typography } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useApp } from "../providers/AppProvider";
 
-export default function Topbar() {
+export default function TopBar() {
   const { toggleMobile } = useApp();
 
   return (

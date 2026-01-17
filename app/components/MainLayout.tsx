@@ -1,22 +1,18 @@
 "use client";
 
 import Sidebar from "./Sidebar";
-import Topbar from "./Topbar";
-
-const drawerWidth = 240;
-const topbarHeight = 64;
+import TopBar from "./TopBar";
 
 export default function MainLayout({ children }) {
   return (
     <div className="d-flex">
-      <Topbar />
+      <TopBar />
       <Sidebar />
-
       <main
         className="flex-grow-1 p-3"
         style={{
-          marginTop: `${topbarHeight}px`,
-          marginLeft: window.innerWidth >= 768 ? `${drawerWidth}px` : 0,
+          marginTop: `${64}px`,
+          marginLeft: window.innerWidth >= 768 ? `${240}px` : 0,
           backgroundColor: "#f5f7fb",
           minHeight: "100vh",
         }}

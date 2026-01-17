@@ -1,32 +1,41 @@
-export default function StatsCards({ transactions }) {  
-  const totalIssued = transactions
-    .filter((t) => t.transactionType === "issue")
-    .reduce((s, t) => s + t.quantity, 0);
-
-  const totalReceived = transactions
-    .filter((t) => t.transactionType === "receipt")
-    .reduce((s, t) => s + t.quantity, 0);
+export default function StatsCards({ transactions }) {
+  const { issued, received } = transactions.reduce(
+    (a, t) => {
+      if (t.transactionType === "issue") a.issued += t.quantity;
+      if (t.transactionType === "receipt") a.received += t.quantity;
+      return a;
+    },
+    { issued: 0, received: 0 },
+  );
 
   return (
     <div className="row mb-4">
-      <Stat title="Total Issued" value={`${totalIssued} kg`} color="danger" />
-      <Stat
-        title="Total Received"
-        value={`${totalReceived} kg`}
-        color="success"
-      />
-      <Stat title="Transactions" value={transactions.length} color="primary" />
+      <div className="col-md-4">
+        <div className="card shadow-sm">
+          <div className="card-body">
+            <h6 className="text-muted">Total Issued</h6>
+            <h3 className="text-danger">{issued} kg</h3>
+          </div>
+        </div>
+      </div>
+
+      <div className="col-md-4">
+        <div className="card shadow-sm">
+          <div className="card-body">
+            <h6 className="text-muted">Total Received</h6>
+            <h3 className="text-success">{received} kg</h3>
+          </div>
+        </div>
+      </div>
+
+      <div className="col-md-4">
+        <div className="card shadow-sm">
+          <div className="card-body">
+            <h6 className="text-muted">Transactions</h6>
+            <h3 className="text-primary">{transactions.length}</h3>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
-
-const Stat = ({ title, value, color }) => (
-  <div className="col-md-4">
-    <div className="card shadow-sm">
-      <div className="card-body">
-        <h6 className="text-muted">{title}</h6>
-        <h3 className={`text-${color}`}>{value}</h3>
-      </div>
-    </div>
-  </div>
-);

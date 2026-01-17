@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { calculateClosing } from "./utils";
-export default function TransactionForm({ onSubmit }) {
+
+export default function TransactionForm({ onSubmit, onClose }) {
   const [wLedgers, setWledgers] = useState([]);
   const [yarns, setYarns] = useState([]);
 
@@ -27,7 +28,7 @@ export default function TransactionForm({ onSubmit }) {
     fetchData();
   }, []);
 
-  /* ----------- Auto opening balance ----------- */
+  /* -------- Auto opening balance -------- */
   useEffect(() => {
     if (!form.wLedgerId || !form.yarnId) return;
 
@@ -47,7 +48,7 @@ export default function TransactionForm({ onSubmit }) {
     }));
   }, [form.wLedgerId, form.yarnId, wLedgers, yarns]);
 
-  /* -------------- Input change --------------- */
+  /* ---------- Input change ---------- */
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -67,117 +68,127 @@ export default function TransactionForm({ onSubmit }) {
     });
   };
 
-  /* ---------------- Submit ------------------- */
+  /* ---------- Submit ---------- */
   const handleSubmit = (e) => {
-    // e.preventDefault();
+    e.preventDefault();
     onSubmit(form);
   };
 
   return (
-    <div className="card shadow mb-4">
-      <div className="card-header bg-primary text-white">
-        <h5 className="mb-0">Add Yarn Transaction</h5>
-      </div>
-
-      <div className="card-body">
-        <form onSubmit={handleSubmit}>
-          <div className="row g-3">
-            <div className="col-md-3">
-              <label>Transaction Type</label>
-              <select
-                name="transactionType"
-                className="form-select"
-                value={form.transactionType}
-                onChange={handleChange}
-              >
-                <option value="issue">Issue</option>
-                <option value="receipt">Receipt</option>
-                <option value="adjustment">Adjustment</option>
-              </select>
+    <>
+      <div className="modal fade show d-block" tabIndex="-1">
+        <div className="modal-dialog modal-md modal-dialog-centered">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h6 className="modal-title">Add Transaction</h6>
+              <button type="button" className="btn-close" onClick={onClose} />
             </div>
 
-            <div className="col-md-3">
-              <label>Weaver</label>
-              <select
-                name="wLedgerId"
-                className="form-select"
-                value={form.wLedgerId}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Select Weaver</option>
-                {wLedgers.map((l) => (
-                  <option key={l._id} value={l._id}>
-                    {l.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <div className="modal-body">
+              <form onSubmit={handleSubmit}>
+                <div className="row g-2">
+                  <div className="col-12">
+                    <label className="form-label">Transaction Type</label>
+                    <select
+                      name="transactionType"
+                      className="form-select form-select-sm"
+                      value={form.transactionType}
+                      onChange={handleChange}
+                    >
+                      <option value="issue">Issue</option>
+                      <option value="receipt">Receipt</option>
+                      <option value="adjustment">Adjustment</option>
+                    </select>
+                  </div>
 
-            <div className="col-md-3">
-              <label>Yarn</label>
-              <select
-                name="yarnId"
-                className="form-select"
-                value={form.yarnId}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Select Yarn</option>
-                {yarns.map((y) => (
-                  <option key={y._id} value={y._id}>
-                    {y.name} ({y.category} {y.count})
-                  </option>
-                ))}
-              </select>
-            </div>
+                  <div className="col-12">
+                    <label className="form-label">Weaver</label>
+                    <select
+                      name="wLedgerId"
+                      className="form-select form-select-sm"
+                      value={form.wLedgerId}
+                      onChange={handleChange}
+                      required
+                    >
+                      <option value="">Select</option>
+                      {wLedgers.map((l) => (
+                        <option key={l._id} value={l._id}>
+                          {l.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-            <div className="col-md-3">
-              <label>Quantity (kg)</label>
-              <input
-                type="number"
-                name="quantity"
-                className="form-control"
-                value={form.quantity}
-                onChange={handleChange}
-                required
-              />
-            </div>
+                  <div className="col-12">
+                    <label className="form-label">Yarn</label>
+                    <select
+                      name="yarnId"
+                      className="form-select form-select-sm"
+                      value={form.yarnId}
+                      onChange={handleChange}
+                      required
+                    >
+                      <option value="">Select</option>
+                      {yarns.map((y) => (
+                        <option key={y._id} value={y._id}>
+                          {y.name} ({y.category} {y.count})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-            <div className="col-md-3">
-              <label>Opening Balance</label>
-              <input
-                readOnly
-                className="form-control"
-                value={form.openingBalance}
-              />
-            </div>
+                  <div className="col-12">
+                    <label className="form-label">Quantity (kg)</label>
+                    <input
+                      type="number"
+                      name="quantity"
+                      className="form-control form-control-sm"
+                      value={form.quantity}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
 
-            <div className="col-md-3">
-              <label>Closing Balance</label>
-              <input
-                readOnly
-                className="form-control"
-                value={form.closingBalance}
-              />
-            </div>
+                  <div className="col-6">
+                    <label className="form-label">Opening</label>
+                    <input
+                      readOnly
+                      className="form-control form-control-sm"
+                      value={form.openingBalance}
+                    />
+                  </div>
 
-            <div className="col-md-6">
-              <label>Remarks</label>
-              <input
-                name="remarks"
-                className="form-control"
-                value={form.remarks}
-                onChange={handleChange}
-              />
-            </div>
+                  <div className="col-6">
+                    <label className="form-label">Closing</label>
+                    <input
+                      readOnly
+                      className="form-control form-control-sm"
+                      value={form.closingBalance}
+                    />
+                  </div>
 
-            <div className="col-12 text-end">
-              <button className="btn btn-primary">Add Transaction</button>
+                  <div className="col-12">
+                    <label className="form-label">Remarks</label>
+                    <input
+                      name="remarks"
+                      className="form-control form-control-sm"
+                      value={form.remarks}
+                      onChange={handleChange}
+                    />
+                  </div>
+
+                  <div className="col-12 text-end mt-2">
+                    <button className="btn btn-primary btn-sm">Add</button>
+                  </div>
+                </div>
+              </form>
             </div>
           </div>
-        </form>
+        </div>
       </div>
-    </div>
+
+      {/* Backdrop */}
+      <div className="modal-backdrop fade show" />
+    </>
   );
 }
