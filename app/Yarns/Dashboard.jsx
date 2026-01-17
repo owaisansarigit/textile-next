@@ -59,9 +59,14 @@ export default function Dashboard() {
       <StatsCards transactions={transactions} />
       {showModal && (
         <>
-          <div className="modal fade show d-block" tabIndex="-1">
-            <div className="modal-dialog modal-lg modal-dialog-centered">
-              <div className="modal-content">
+          <div
+            className="modal fade show d-block"
+            tabIndex="-1"
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="modal-dialog modal-md modal-dialog-centered">
+              <div className="modal-content shadow-lg">
                 <div className="modal-header">
                   <h5 className="modal-title">New Transaction</h5>
                   <button
@@ -82,10 +87,11 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Backdrop */}
-          <div className="modal-backdrop fade show" />
+          </div>          
+          <div
+            className="modal-backdrop fade show"
+            style={{ backdropFilter: "blur(6px)" }}
+          />
         </>
       )}
 
