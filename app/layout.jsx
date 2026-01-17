@@ -1,9 +1,6 @@
-import { AppProvider } from "./providers/AppProvider";
-import { connectDB } from "./lib/db/connect";
-connectDB();
-
-import MainLayout from "./components/MainLayout";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { AppProvider } from "./providers/AppProvider";
+import MainLayout from "./components/MainLayout";
 
 export default function RootLayout({ children }) {
   return (

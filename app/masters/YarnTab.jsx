@@ -73,7 +73,7 @@ const YarnTab = () => {
               ) : yarns.length > 0 ? (
                 yarns.map((yarn) => (
                   <YarnTableRow
-                    key={yarn.id}
+                    key={yarn._id}
                     yarn={yarn}
                     onDelete={handleDelete}
                     onEdit={openEdit}

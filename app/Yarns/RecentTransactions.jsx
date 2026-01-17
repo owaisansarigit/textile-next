@@ -1,8 +1,11 @@
-const RecentTransactions = ({
-  getTransactionBadge,
-  transactions,
-  getTransactionIcon,
-}) => {
+import { TX_META } from "./utils";
+
+const RecentTransactions = ({ transactions }) => {
+  const getTransactionBadge = (t) => TX_META[t].badge;
+  const getTransactionIcon = (t) => TX_META[t].icon;
+
+  console.log(transactions);
+
   return (
     <div className="row">
       <div className="col-12">
@@ -18,65 +21,49 @@ const RecentTransactions = ({
               <table className="table table-hover mb-0">
                 <thead className="table-light">
                   <tr>
-                    <th>Type</th>
-                    <th>Date & Time</th>
-                    <th>Warehouse</th>
-                    <th>Yarn Type</th>
-                    <th>Cloth Book</th>
-                    <th>Quantity</th>
-                    <th>Opening</th>
-                    <th>Closing</th>
-                    <th>Remarks</th>
+                    <td className="text-center">Type</td>
+                    <td className="text-center">Date & Time</td>
+                    <td className="text-center">Weaver</td>
+                    <td className="text-center">Yarn</td>
+                    <td className="text-center">Opening</td>
+                    <td className="text-center">Quantity</td>
+                    <td className="text-center">Closing</td>
+                    <td className="text-center">Remarks</td>
                   </tr>
                 </thead>
                 <tbody>
                   {transactions.map((transaction) => (
                     <tr key={transaction._id}>
-                      <td>
+                      <td className="text-center">
                         <span
-                          className={`badge ${getTransactionBadge(
-                            transaction.transactionType
-                          )}`}
+                          className={`badge ${getTransactionBadge(transaction.transactionType)}`}
                         >
                           <i
-                            className={`bi ${getTransactionIcon(
-                              transaction.transactionType
-                            )} me-1`}
+                            className={`bi ${getTransactionIcon(transaction.transactionType)} me-1`}
                           ></i>
-                          {transaction.transactionType.toUpperCase()}
+                          {transaction.transactionType}
                         </span>
                       </td>
-                      <td>
+                      <td className="text-center">
                         {new Date(transaction.createdAt).toLocaleDateString()}
                         <div className="text-muted small">
                           {new Date(transaction.createdAt).toLocaleTimeString()}
                         </div>
                       </td>
-                      <td>
+                      <td className="text-center">
                         <i className="bi bi-building me-1 text-muted"></i>
                         {transaction.wLedgerId?.name}
                       </td>
-                      <td>
-                        <div className="d-flex align-items-center">
-                          <div
-                            className="rounded-circle me-2"
-                            style={{
-                              width: "12px",
-                              height: "12px",
-                              backgroundColor:
-                                transaction.yarnId?.color || "#999",
-                            }}
-                          ></div>
-                          {transaction.yarnId?.name}
-                        </div>
+                      <td className="text-center">
+                        {transaction.yarnId?.category}-
+                        {transaction.yarnId?.count}-{transaction.yarnId?.name}
                       </td>
-                      <td>
-                        <span className="badge bg-light text-dark">
-                          <i className="bi bi-journal-text me-1"></i>
-                          {transaction.clothBookId?.bookNumber}
+                      <td className="text-center">
+                        <span className="text-muted">
+                          {transaction.openingBalance} kg
                         </span>
                       </td>
-                      <td>
+                      <td className="text-center">
                         <span
                           className={`fw-bold ${
                             transaction.transactionType === "issue"
@@ -88,17 +75,12 @@ const RecentTransactions = ({
                           {Math.abs(transaction.quantity)} kg
                         </span>
                       </td>
-                      <td>
-                        <span className="text-muted">
-                          {transaction.openingBalance} kg
-                        </span>
-                      </td>
-                      <td>
+                      <td className="text-center">
                         <span className="fw-bold">
                           {transaction.closingBalance} kg
                         </span>
                       </td>
-                      <td>
+                      <td className="text-center">
                         <small className="text-muted">
                           {transaction.remarks}
                         </small>
@@ -127,47 +109,3 @@ const RecentTransactions = ({
 };
 
 export default RecentTransactions;
-// export default function RecentTransactions({
-//   transactions,
-//   getTransactionBadge,
-//   getTransactionIcon,
-// }) {
-//   return (
-//     <div className="card shadow-sm">
-//       <div className="card-header">
-//         <h5>Recent Transactions</h5>
-//       </div>
-//       <div className="table-responsive">
-//         <table className="table">
-//           <thead>
-//             <tr>
-//               <th>Type</th>
-//               <th>Date</th>
-//               <th>Warehouse</th>
-//               <th>Yarn</th>
-//               <th>Qty</th>
-//               <th>Closing</th>
-//             </tr>
-//           </thead>
-//           <tbody>
-//             {transactions.map(t => (
-//               <tr key={t._id}>
-//                 <td>
-//                   <span className={`badge ${getTransactionBadge(t.transactionType)}`}>
-//                     <i className={`bi ${getTransactionIcon(t.transactionType)} me-1`} />
-//                     {t.transactionType}
-//                   </span>
-//                 </td>
-//                 <td>{new Date(t.createdAt).toLocaleString()}</td>
-//                 <td>{t.wLedgerId?.name}</td>
-//                 <td>{t.yarnId?.name}</td>
-//                 <td>{t.quantity} kg</td>
-//                 <td>{t.closingBalance} kg</td>
-//               </tr>
-//             ))}
-//           </tbody>
-//         </table>
-//       </div>
-//     </div>
-//   );
-// }

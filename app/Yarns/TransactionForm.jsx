@@ -14,14 +14,12 @@ export default function TransactionForm({ onSubmit }) {
     remarks: "",
   });
 
-  /* ---------------- Fetch data ---------------- */
   useEffect(() => {
     const fetchData = async () => {
       const [ledgerRes, yarnRes] = await Promise.all([
         fetch("/api/wledgers").then((r) => r.json()),
         fetch("/api/yarn").then((r) => r.json()),
       ]);
-
       setWledgers(ledgerRes?.data || []);
       setYarns(yarnRes || []);
     };
@@ -37,7 +35,7 @@ export default function TransactionForm({ onSubmit }) {
     const yarn = yarns.find((y) => y._id === form.yarnId);
 
     const match = ledger?.currentYarnBalance?.find(
-      (b) => b.category === yarn?.category && b.count === yarn?.count
+      (b) => b.category === yarn?.category && b.count === yarn?.count,
     );
 
     const opening = match?.quantityKg ?? 0;
@@ -62,7 +60,7 @@ export default function TransactionForm({ onSubmit }) {
       updated.closingBalance = calculateClosing(
         updated.transactionType,
         updated.openingBalance,
-        updated.quantity
+        updated.quantity,
       );
 
       return updated;
@@ -71,7 +69,7 @@ export default function TransactionForm({ onSubmit }) {
 
   /* ---------------- Submit ------------------- */
   const handleSubmit = (e) => {
-    e.preventDefault();
+    // e.preventDefault();
     onSubmit(form);
   };
 

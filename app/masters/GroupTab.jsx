@@ -64,7 +64,7 @@ const GroupTab = () => {
           <tbody>
             {groups.length > 0 ? (
               groups.map((g) => (
-                <tr key={g.id}>
+                <tr key={g._id}>
                   <td>{g.name}</td>
                   <td className="text-end">
                     <Button

@@ -4,7 +4,6 @@ import StatsCards from "./StatsCards";
 import TransactionForm from "./TransactionForm";
 import RecentTransactions from "./RecentTransactions";
 import useTransactions from "./useTransactions";
-import { TX_META } from "./utils";
 import { useState } from "react";
 
 export default function Dashboard() {
@@ -31,11 +30,7 @@ export default function Dashboard() {
         />
       )}
 
-      <RecentTransactions
-        transactions={transactions}
-        getTransactionBadge={(t) => TX_META[t].badge}
-        getTransactionIcon={(t) => TX_META[t].icon}
-      />
+      <RecentTransactions transactions={transactions} />
     </div>
   );
 }

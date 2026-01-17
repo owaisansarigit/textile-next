@@ -1,16 +1,20 @@
-export default function StatsCards({ transactions }) {
+export default function StatsCards({ transactions }) {  
   const totalIssued = transactions
-    .filter(t => t.transactionType === "issue")
+    .filter((t) => t.transactionType === "issue")
     .reduce((s, t) => s + t.quantity, 0);
 
   const totalReceived = transactions
-    .filter(t => t.transactionType === "receipt")
+    .filter((t) => t.transactionType === "receipt")
     .reduce((s, t) => s + t.quantity, 0);
 
   return (
     <div className="row mb-4">
       <Stat title="Total Issued" value={`${totalIssued} kg`} color="danger" />
-      <Stat title="Total Received" value={`${totalReceived} kg`} color="success" />
+      <Stat
+        title="Total Received"
+        value={`${totalReceived} kg`}
+        color="success"
+      />
       <Stat title="Transactions" value={transactions.length} color="primary" />
     </div>
   );

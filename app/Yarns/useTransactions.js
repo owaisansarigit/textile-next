@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { calculateClosing } from "./utils";
 
 export default function useTransactions() {
     const [transactions, setTransactions] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
     const [currentBalance, setCurrentBalance] = useState(210);
 
     const getTransactions = async () => {
@@ -30,15 +32,18 @@ export default function useTransactions() {
             const payload = { ...data, closingBalance, };
             const res = await fetch("/api/yarn-transactions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload), });
             const savedTx = await res.json();
-            const newTx = { ...savedTx.data, createdAt: savedTx.data?.createdAt || new Date().toISOString(), };
-            setTransactions((prev) => [newTx, ...prev]);
+            console.log("Transaction saved:", savedTx);
+            setTransactions((prev) => [savedTx.data, ...prev]);
+            getTransactions()
             setCurrentBalance(closingBalance);
-            console.log("Transaction saved:", newTx);
         } catch (error) {
             console.error("Failed to add transaction:", error);
         }
     };
 
+    useEffect(() => {
+        getTransactions()
+    }, []);
 
-    return { transactions, currentBalance, addTransaction };
+    return { transactions, currentBalance, addTransaction, getTransactions, loading, error };
 }
