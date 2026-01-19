@@ -30,12 +30,12 @@ export async function POST(req: Request) {
       wLedgerId,
       yarnId,
       transactionType,
+      issueMode,
       quantity,
+      bags,
       remarks,
       clothBookId,
     } = await req.json();
-
-    console.log("📥 Request body received");
 
     const yarn = await Yarn.findById(yarnId);
     if (!yarn)
@@ -50,7 +50,6 @@ export async function POST(req: Request) {
     );
 
     if (!ledgerYarn) {
-      console.log("➕ Creating new yarn balance entry");
       ledgerYarn = {
         category: yarn.category,
         count: yarn.count,
@@ -60,45 +59,104 @@ export async function POST(req: Request) {
     }
 
     const openingBalance = ledgerYarn.quantityKg;
-    let closingBalance = openingBalance;
+    const bagWeight = yarn.bagWeight;
 
+    /* ---------- Issued / Received KG ---------- */
+    const txnKg = issueMode === "bag" ? (bags || 0) * bagWeight : quantity || 0;
+
+    if (txnKg <= 0)
+      return NextResponse.json({ error: "Invalid quantity" }, { status: 400 });
+
+    /* ---------- Update Weaver Ledger ---------- */
+    const delta =
+      transactionType === "issue"
+        ? txnKg + openingBalance
+        : txnKg - openingBalance;
+
+    if (openingBalance + delta < 0)
+      return NextResponse.json(
+        { error: "Insufficient yarn balance in weaver ledger" },
+        { status: 400 },
+      );
+
+    ledgerYarn.quantityKg += delta;
+
+    /* ---------- Update Yarn Stock ---------- */
     if (transactionType === "issue") {
-      if (!clothBookId) {
-        closingBalance += quantity; // yarn issued to weaver
-      } else {
-        if (openingBalance < quantity) {
+      if (issueMode === "bag") {
+        if (yarn.stockBags < bags)
           return NextResponse.json(
-            { error: "Insufficient yarn balance in WLedger" },
+            { error: "Insufficient yarn bags" },
             { status: 400 },
           );
+
+        yarn.stockBags -= bags;
+      } else {
+        let remaining = quantity;
+
+        // Use loose first
+        if (yarn.looseStock >= remaining) {
+          yarn.looseStock -= remaining;
+          remaining = 0;
+        } else {
+          remaining -= yarn.looseStock;
+          yarn.looseStock = 0;
         }
-        closingBalance -= quantity; // yarn consumed
+
+        // Break bags if needed
+        while (remaining > 0) {
+          if (yarn.stockBags <= 0)
+            return NextResponse.json(
+              { error: "Insufficient yarn stock" },
+              { status: 400 },
+            );
+
+          yarn.stockBags -= 1;
+
+          if (remaining <= bagWeight) {
+            yarn.looseStock += bagWeight - remaining;
+            remaining = 0;
+          } else {
+            remaining -= bagWeight;
+          }
+        }
       }
 
-      ledgerYarn.quantityKg = closingBalance;
+      yarn.stockWeight -= txnKg;
     }
 
-    await wLedger.save();
-    console.log("💾 WLedger updated");
+    /* ---------- Receipt ---------- */
+    if (transactionType === "receipt") {
+      yarn.looseStock += txnKg;
+      yarn.stockWeight += txnKg;
+    }
+
+    if (yarn.stockWeight < 0)
+      return NextResponse.json(
+        { error: "Negative yarn stock not allowed" },
+        { status: 400 },
+      );
+
+    /* ---------- Save ---------- */
+    await Promise.all([wLedger.save(), yarn.save()]);
 
     const transaction = await YarnTransactions.create({
       wLedgerId,
       yarnId,
       clothBookId,
       transactionType,
-      quantity,
+      issueMode,
+      quantity: txnKg,
       openingBalance,
-      closingBalance,
+      closingBalance: ledgerYarn.quantityKg,
       remarks,
     });
-
-    console.log("🧾 Transaction saved:", transaction._id);
 
     return NextResponse.json({ created: transaction }, { status: 201 });
   } catch (error: any) {
     console.error("🔥 Yarn transaction error", error);
     return NextResponse.json(
-      { error: error.message || "Failed to save yarn transaction" },
+      { error: error.message || "Transaction failed" },
       { status: 500 },
     );
   }

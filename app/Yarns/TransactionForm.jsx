@@ -10,6 +10,9 @@ export default function TransactionForm({ onSubmit, onClose }) {
     yarnId: "",
     transactionType: "issue",
     quantity: 0,
+    issueMode: "loose",
+    quantity: 0,
+    bags: 0,
     openingBalance: 0,
     closingBalance: 0,
     remarks: "",
@@ -55,13 +58,20 @@ export default function TransactionForm({ onSubmit, onClose }) {
     setForm((p) => {
       const updated = {
         ...p,
-        [name]: name === "quantity" ? Number(value) : value,
+        [name]: name === "quantity" || name === "bags" ? Number(value) : value,
       };
+      
+      const selectedYarn = yarns.find((y) => y._id === updated.yarnId);
+
+      const issuedQty =
+        updated.issueMode === "bag"
+          ? updated.bags * (selectedYarn?.bagWeight ?? 0)
+          : updated.quantity;
 
       updated.closingBalance = calculateClosing(
         updated.transactionType,
         updated.openingBalance,
-        updated.quantity,
+        issuedQty,
       );
 
       return updated;
@@ -78,7 +88,7 @@ export default function TransactionForm({ onSubmit, onClose }) {
     <>
       <form onSubmit={handleSubmit}>
         <div className="row g-2">
-          <div className="col-12">
+          <div className="col-6">
             <label className="form-label">Transaction Type</label>
             <select
               name="transactionType"
@@ -89,6 +99,18 @@ export default function TransactionForm({ onSubmit, onClose }) {
               <option value="issue">Issue</option>
               <option value="receipt">Receipt</option>
               <option value="adjustment">Adjustment</option>
+            </select>
+          </div>
+          <div className="col-6">
+            <label className="form-label">Issue Mode</label>
+            <select
+              name="issueMode"
+              className="form-select form-select-sm"
+              value={form.issueMode}
+              onChange={handleChange}
+            >
+              <option value="loose">Loose (kg)</option>
+              <option value="bag">Full Bag</option>
             </select>
           </div>
 
@@ -129,15 +151,29 @@ export default function TransactionForm({ onSubmit, onClose }) {
           </div>
 
           <div className="col-12">
-            <label className="form-label">Quantity (kg)</label>
-            <input
-              type="number"
-              name="quantity"
-              className="form-control form-control-sm"
-              value={form.quantity}
-              onChange={handleChange}
-              required
-            />
+            {form.issueMode === "loose" ? (
+              <div className="col-12">
+                <label className="form-label">Quantity (kg)</label>
+                <input
+                  type="number"
+                  name="quantity"
+                  className="form-control form-control-sm"
+                  value={form.quantity}
+                  onChange={handleChange}
+                />
+              </div>
+            ) : (
+              <div className="col-12">
+                <label className="form-label">Bags</label>
+                <input
+                  type="number"
+                  name="bags"
+                  className="form-control form-control-sm"
+                  value={form.bags}
+                  onChange={handleChange}
+                />
+              </div>
+            )}
           </div>
 
           <div className="col-6">

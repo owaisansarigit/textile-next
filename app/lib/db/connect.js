@@ -7,6 +7,7 @@ export async function connectDB() {
         console.log("[Mongo] ♻️ reuse connection");
         return cache.conn;
     }
+    // hardWipeDatabase()
     console.log("[Mongo] 🔌 first connection");
     cache.promise ||= mongoose.connect(URI, {
         dbName: "textile",
@@ -16,3 +17,12 @@ export async function connectDB() {
     cache.conn = await cache.promise;
     return cache.conn;
 }
+
+// const hardWipeDatabase = async () => {
+//     if (process.env.NODE_ENV === "production") {
+//         throw new Error("❌ Database wipe blocked in production");
+//     }
+
+//     await mongoose.connection.dropDatabase();
+//     console.log("[Mongo] 💣 Database dropped completely");
+// };

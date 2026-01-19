@@ -87,7 +87,7 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-          </div>          
+          </div>
           <div
             className="modal-backdrop fade show"
             style={{ backdropFilter: "blur(6px)" }}
