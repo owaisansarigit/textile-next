@@ -1,40 +1,3 @@
-// "use client";
-// import Header from "./Header";
-// import StatsCards from "./StatsCards";
-// import TransactionForm from "./TransactionForm";
-// import RecentTransactions from "./RecentTransactions";
-// import useTransactions from "./useTransactions";
-// import { useState } from "react";
-
-// export default function Dashboard() {
-//   const { transactions, currentBalance, addTransaction, loading } =
-//     useTransactions();
-//   const [showForm, setShowForm] = useState(false);
-
-//   return (
-//     <div className="container py-4">
-//       <Header
-//         balance={currentBalance}
-//         showForm={showForm}
-//         toggleForm={() => setShowForm(!showForm)}
-//       />
-
-//       <StatsCards transactions={transactions} />
-
-//       {showForm && (
-//         <TransactionForm
-//           balance={currentBalance}
-//           onSubmit={(data) => {
-//             addTransaction(data);
-//             setShowForm(false);
-//           }}
-//         />
-//       )}
-
-//       <RecentTransactions transactions={transactions} loading={loading} />
-//     </div>
-//   );
-// }
 "use client";
 import Header from "./Header";
 import StatsCards from "./StatsCards";
@@ -44,8 +7,14 @@ import useTransactions from "./useTransactions";
 import { useState } from "react";
 
 export default function Dashboard() {
-  const { transactions, currentBalance, addTransaction, loading } =
-    useTransactions();
+  const {
+    yarns,
+    wLedgers,
+    transactions,
+    currentBalance,
+    addTransaction,
+    loading,
+  } = useTransactions();
 
   const [showModal, setShowModal] = useState(false);
 
@@ -79,6 +48,8 @@ export default function Dashboard() {
                 <div className="modal-body">
                   <TransactionForm
                     balance={currentBalance}
+                    wLedgers={wLedgers}
+                    yarns={yarns}
                     onSubmit={(data) => {
                       addTransaction(data);
                       setShowModal(false);

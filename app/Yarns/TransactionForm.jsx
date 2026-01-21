@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
 import { calculateClosing } from "./utils";
 
-export default function TransactionForm({ onSubmit, onClose }) {
-  const [wLedgers, setWledgers] = useState([]);
-  const [yarns, setYarns] = useState([]);
-
+export default function TransactionForm({ onSubmit, wLedgers, yarns }) {
   const [form, setForm] = useState({
     wLedgerId: "",
     yarnId: "",
@@ -17,19 +14,7 @@ export default function TransactionForm({ onSubmit, onClose }) {
     closingBalance: 0,
     remarks: "",
   });
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const [ledgerRes, yarnRes] = await Promise.all([
-        fetch("/api/wledgers").then((r) => r.json()),
-        fetch("/api/yarn").then((r) => r.json()),
-      ]);
-      setWledgers(ledgerRes?.data || []);
-      setYarns(yarnRes || []);
-    };
-
-    fetchData();
-  }, []);
+  const selectedYarn = yarns.find((y) => y._id === form.yarnId);
 
   /* -------- Auto opening balance -------- */
   useEffect(() => {
@@ -60,9 +45,7 @@ export default function TransactionForm({ onSubmit, onClose }) {
         ...p,
         [name]: name === "quantity" || name === "bags" ? Number(value) : value,
       };
-      
-      const selectedYarn = yarns.find((y) => y._id === updated.yarnId);
-
+      const selectedYarn = yarns.find((y) => y._id === form.yarnId);
       const issuedQty =
         updated.issueMode === "bag"
           ? updated.bags * (selectedYarn?.bagWeight ?? 0)
@@ -81,6 +64,25 @@ export default function TransactionForm({ onSubmit, onClose }) {
   /* ---------- Submit ---------- */
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    const yarn = yarns.find((y) => y._id === form.yarnId);
+    if (!yarn) return;
+
+    const issueKg =
+      form.issueMode === "bag" ? form.bags * yarn.bagWeight : form.quantity;
+
+    if (form.transactionType === "issue") {
+      if (issueKg <= 0) {
+        alert("Invalid quantity");
+        return;
+      }
+
+      if (issueKg > yarn.availableKg) {
+        alert("Issue quantity exceeds available yarn stock");
+        return;
+      }
+    }
+
     onSubmit(form);
   };
 
@@ -132,7 +134,7 @@ export default function TransactionForm({ onSubmit, onClose }) {
             </select>
           </div>
 
-          <div className="col-12">
+          <div className="col-6">
             <label className="form-label">Yarn</label>
             <select
               name="yarnId"
@@ -149,6 +151,18 @@ export default function TransactionForm({ onSubmit, onClose }) {
               ))}
             </select>
           </div>
+          <div className="col-6">
+            {selectedYarn && (
+              <div className="small text-muted mt-1">
+                Stock:
+                <strong> {selectedYarn.stockBags}</strong> bags,
+                <strong> {selectedYarn.looseStock}</strong> kg loose
+                <span className="ms-2">
+                  (Total: <strong>{selectedYarn.availableKg}</strong> kg)
+                </span>
+              </div>
+            )}
+          </div>
 
           <div className="col-12">
             {form.issueMode === "loose" ? (
@@ -157,6 +171,7 @@ export default function TransactionForm({ onSubmit, onClose }) {
                 <input
                   type="number"
                   name="quantity"
+                  max={selectedYarn?.availableKg || 0}
                   className="form-control form-control-sm"
                   value={form.quantity}
                   onChange={handleChange}
@@ -168,6 +183,7 @@ export default function TransactionForm({ onSubmit, onClose }) {
                 <input
                   type="number"
                   name="bags"
+                  max={selectedYarn?.availableBags || 0}
                   className="form-control form-control-sm"
                   value={form.bags}
                   onChange={handleChange}

@@ -1,8 +1,8 @@
 export default function StatsCards({ transactions }) {
   const { issued, received } = transactions.reduce(
     (a, t) => {
-      if (t.transactionType === "issue") a.issued += t.quantity;
-      if (t.transactionType === "receipt") a.received += t.quantity;
+      if (t?.transactionType === "issue") a.issued += t.quantity;
+      if (t?.transactionType === "receipt") a.received += t.quantity;
       return a;
     },
     { issued: 0, received: 0 },

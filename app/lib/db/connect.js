@@ -18,11 +18,11 @@ export async function connectDB() {
     return cache.conn;
 }
 
-// const hardWipeDatabase = async () => {
-//     if (process.env.NODE_ENV === "production") {
-//         throw new Error("❌ Database wipe blocked in production");
-//     }
+const hardWipeDatabase = async () => {
+    if (process.env.NODE_ENV === "production") {
+        throw new Error("❌ Database wipe blocked in production");
+    }
 
-//     await mongoose.connection.dropDatabase();
-//     console.log("[Mongo] 💣 Database dropped completely");
-// };
+    await mongoose.connection.dropDatabase();
+    console.log("[Mongo] 💣 Database dropped completely");
+};

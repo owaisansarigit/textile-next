@@ -10,7 +10,7 @@ export async function GET() {
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to fetch yarns" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message || "Failed to create yarn" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 }

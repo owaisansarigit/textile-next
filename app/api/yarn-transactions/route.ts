@@ -22,32 +22,43 @@ export async function GET() {
   }
 }
 
-export async function POST(req: Request) {
+export const POST = async (req: Request) => {
   try {
     await connectDB();
 
     const {
       wLedgerId,
       yarnId,
-      transactionType,
-      issueMode,
-      quantity,
-      bags,
+      transactionType, // "issue" | "receipt"
+      issueMode, // "bag" | "loose"
+      quantity, // kg (if loose)
+      bags, // count (if bag)
       remarks,
       clothBookId,
     } = await req.json();
 
+    /* ===================== Fetch ===================== */
     const yarn = await Yarn.findById(yarnId);
-    if (!yarn)
-      return NextResponse.json({ error: "Yarn not found" }, { status: 404 });
+    if (!yarn) throw new Error("Yarn not found");
 
     const wLedger = await WLedger.findById(wLedgerId);
-    if (!wLedger)
-      return NextResponse.json({ error: "WLedger not found" }, { status: 404 });
+    if (!wLedger) throw new Error("Weaver ledger not found");
 
+    /* ===================== Find / Create Ledger Yarn ===================== */
     let ledgerYarn = wLedger.currentYarnBalance.find(
       (y: any) => y.category === yarn.category && y.count === yarn.count,
     );
+
+    if (!ledgerYarn) {
+      wLedger.currentYarnBalance.push({
+        category: yarn.category,
+        count: yarn.count,
+        quantityKg: 0,
+      });
+
+      // IMPORTANT: re-fetch tracked subdocument
+      ledgerYarn = wLedger.currentYarnBalance.at(-1);
+    }
 
     if (!ledgerYarn) {
       ledgerYarn = {
@@ -59,42 +70,47 @@ export async function POST(req: Request) {
     }
 
     const openingBalance = ledgerYarn.quantityKg;
-    const bagWeight = yarn.bagWeight;
 
-    /* ---------- Issued / Received KG ---------- */
-    const txnKg = issueMode === "bag" ? (bags || 0) * bagWeight : quantity || 0;
+    /* ===================== Calculate Txn Kg ===================== */
+    let txnKg = 0;
 
-    if (txnKg <= 0)
-      return NextResponse.json({ error: "Invalid quantity" }, { status: 400 });
+    if (issueMode === "bag") {
+      if (!bags || bags <= 0) throw new Error("Invalid bag quantity");
+      txnKg = bags * yarn.bagWeight;
+    } else {
+      if (!quantity || quantity <= 0) throw new Error("Invalid loose quantity");
+      txnKg = quantity;
+    }
 
-    /* ---------- Update Weaver Ledger ---------- */
-    const delta =
-      transactionType === "issue"
-        ? txnKg + openingBalance
-        : txnKg - openingBalance;
+    /* ===================== Validate Balances ===================== */
+    if (transactionType === "issue") {
+      if (yarn.stockWeight < txnKg) {
+        throw new Error("Insufficient yarn stock");
+      }
+    }
 
-    if (openingBalance + delta < 0)
-      return NextResponse.json(
-        { error: "Insufficient yarn balance in weaver ledger" },
-        { status: 400 },
-      );
+    /* ===================== UPDATE WEAVER LEDGER ===================== */
+    if (transactionType === "issue") {
+      ledgerYarn.quantityKg += txnKg;
+    } else {
+      if (ledgerYarn.quantityKg < txnKg) {
+        throw new Error("Insufficient weaver yarn balance");
+      }
+      ledgerYarn.quantityKg -= txnKg;
+    }
 
-    ledgerYarn.quantityKg += delta;
+    const closingBalance = ledgerYarn.quantityKg;
 
-    /* ---------- Update Yarn Stock ---------- */
+    /* ===================== UPDATE YARN MASTER ===================== */
     if (transactionType === "issue") {
       if (issueMode === "bag") {
-        if (yarn.stockBags < bags)
-          return NextResponse.json(
-            { error: "Insufficient yarn bags" },
-            { status: 400 },
-          );
-
+        if (yarn.stockBags < bags) {
+          throw new Error("Insufficient yarn bags");
+        }
         yarn.stockBags -= bags;
       } else {
-        let remaining = quantity;
+        let remaining = txnKg;
 
-        // Use loose first
         if (yarn.looseStock >= remaining) {
           yarn.looseStock -= remaining;
           remaining = 0;
@@ -103,21 +119,18 @@ export async function POST(req: Request) {
           yarn.looseStock = 0;
         }
 
-        // Break bags if needed
         while (remaining > 0) {
-          if (yarn.stockBags <= 0)
-            return NextResponse.json(
-              { error: "Insufficient yarn stock" },
-              { status: 400 },
-            );
+          if (yarn.stockBags <= 0) {
+            throw new Error("Insufficient yarn bags");
+          }
 
           yarn.stockBags -= 1;
 
-          if (remaining <= bagWeight) {
-            yarn.looseStock += bagWeight - remaining;
+          if (remaining <= yarn.bagWeight) {
+            yarn.looseStock += yarn.bagWeight - remaining;
             remaining = 0;
           } else {
-            remaining -= bagWeight;
+            remaining -= yarn.bagWeight;
           }
         }
       }
@@ -125,21 +138,19 @@ export async function POST(req: Request) {
       yarn.stockWeight -= txnKg;
     }
 
-    /* ---------- Receipt ---------- */
     if (transactionType === "receipt") {
       yarn.looseStock += txnKg;
       yarn.stockWeight += txnKg;
     }
 
-    if (yarn.stockWeight < 0)
-      return NextResponse.json(
-        { error: "Negative yarn stock not allowed" },
-        { status: 400 },
-      );
+    if (yarn.stockWeight < 0) {
+      throw new Error("Negative yarn stock not allowed");
+    }
 
-    /* ---------- Save ---------- */
+    /* ===================== SAVE ===================== */
     await Promise.all([wLedger.save(), yarn.save()]);
 
+    /* ===================== TRANSACTION ===================== */
     const transaction = await YarnTransactions.create({
       wLedgerId,
       yarnId,
@@ -148,7 +159,7 @@ export async function POST(req: Request) {
       issueMode,
       quantity: txnKg,
       openingBalance,
-      closingBalance: ledgerYarn.quantityKg,
+      closingBalance,
       remarks,
     });
 
@@ -160,4 +171,4 @@ export async function POST(req: Request) {
       { status: 500 },
     );
   }
-}
+};
