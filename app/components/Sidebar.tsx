@@ -25,6 +25,7 @@ const menu = [
   { text: "Pipe Stock", icon: <InventoryIcon />, path: "/stockpipe" },
   { text: "Masters", icon: <PeopleIcon />, path: "/masters" },
   { text: "Yarns", icon: <PeopleIcon />, path: "/Yarns" },
+  { text: "Cloth", icon: <ReceiptIcon />, path: "/clothbook" },
 ];
 
 export default function Sidebar() {

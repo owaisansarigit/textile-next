@@ -39,7 +39,7 @@
     "app/layout.jsx",
     "app/components/TopBar.jsx",
     "app/components/MainLayout.tsx"
-  ],
+, "app/clothbook/page.jsx"  ],
   "exclude": [
     "node_modules"
   ]
