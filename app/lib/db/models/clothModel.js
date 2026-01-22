@@ -11,5 +11,4 @@ const clothSchema = new mongoose.Schema({
 }, {
     timestamps: true
 });
-
-export const Cloth = mongoose.model('Cloth', clothSchema);
+export const Cloth = mongoose.models.Cloth || mongoose.model('Cloth', clothSchema);

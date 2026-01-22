@@ -14,5 +14,4 @@ const clothBookSchema = new mongoose.Schema({
 }, {
     timestamps: true
 });
-
-export const ClothBook = mongoose.model('ClothBook', clothBookSchema);
+export const ClothBook = mongoose.models.ClothBook || mongoose.model('ClothBook', clothBookSchema);
