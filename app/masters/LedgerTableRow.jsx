@@ -6,7 +6,7 @@ const YarnBalanceModal = ({ show, onHide, ledger, groupName }) => {
   const getTotalQuantity = (balanceArray) => {
     return balanceArray.reduce(
       (total, item) => total + (item.quantityKg || 0),
-      0
+      0,
     );
   };
 
@@ -116,7 +116,7 @@ const YarnBalanceModal = ({ show, onHide, ledger, groupName }) => {
               </div>
             )}
           </div>
-        </div>        
+        </div>
         <div className="mt-4">
           <h6>Recent Yarn Transactions</h6>
           <div className="text-muted p-3 border rounded text-center">
@@ -135,8 +135,6 @@ const YarnBalanceModal = ({ show, onHide, ledger, groupName }) => {
     </Modal>
   );
 };
-
-// Main LedgerTableRow component
 const LedgerTableRow = ({ ledger, groupName, onEdit, onDelete }) => {
   const [showBalanceModal, setShowBalanceModal] = useState(false);
 
@@ -151,7 +149,7 @@ const LedgerTableRow = ({ ledger, groupName, onEdit, onDelete }) => {
   const calculateTotal = (balanceArray) => {
     return balanceArray.reduce(
       (total, item) => total + (item.quantityKg || 0),
-      0
+      0,
     );
   };
 
@@ -180,28 +178,31 @@ const LedgerTableRow = ({ ledger, groupName, onEdit, onDelete }) => {
 
   return (
     <>
-      <tr key={ledger._id}>
-        <td>{name}</td>
-        <td>
+      <tr key={ledger._id} className="align-middle">
+        <td className="py-1">{name}</td>
+
+        <td className="py-1">
           <small className="text-muted">{alias || "—"}</small>
         </td>
-        <td>{groupName || "N/A"}</td>
 
-        {/* Opening Balance - Clickable */}
-        <td>
+        <td className="py-1">{groupName || "N/A"}</td>
+
+        {/* Opening Balance */}
+        <td className="py-1">
           <Button
             variant="link"
             className="p-0 text-decoration-none"
             onClick={() => setShowBalanceModal(true)}
             title="Click to view yarn details"
           >
-            <div className="d-flex flex-column">
+            <div className="d-flex flex-column align-items-start lh-sm">
               <span className="fw-bold">{totalOpening.toFixed(2)} kg</span>
-              <small className="text-muted">
+
+              <small className="text-muted lh-sm">
                 {openingSummary.length > 0
                   ? openingSummary.map((item, idx) => (
                       <span key={idx}>
-                        {item.category}-{item.count}: {item.quantity.toFixed(1)}
+                        {item.category}-{item.count}: {item.quantity.toFixed(1)}{" "}
                         kg
                         {idx < openingSummary.length - 1 ? ", " : ""}
                       </span>
@@ -212,23 +213,24 @@ const LedgerTableRow = ({ ledger, groupName, onEdit, onDelete }) => {
           </Button>
         </td>
 
-        {/* Current Balance - Clickable */}
-        <td>
+        {/* Current Balance */}
+        <td className="py-1">
           <Button
             variant="link"
-            className={`p-0 text-decoration-none fw-bold ${
+            className={`p-0 text-decoration-none ${
               totalCurrent > 0 ? "text-success" : "text-danger"
             }`}
             onClick={() => setShowBalanceModal(true)}
             title="Click to view yarn details"
           >
-            <div className="d-flex flex-column">
-              <span>{totalCurrent.toFixed(2)} kg</span>
-              <small className="text-muted">
+            <div className="d-flex flex-column align-items-start lh-sm">
+              <span className="fw-bold">{totalCurrent.toFixed(2)} kg</span>
+
+              <small className="text-muted lh-sm">
                 {currentSummary.length > 0
                   ? currentSummary.map((item, idx) => (
                       <span key={idx}>
-                        {item.category}-{item.count}: {item.quantity.toFixed(1)}
+                        {item.category}-{item.count}: {item.quantity.toFixed(1)}{" "}
                         kg
                         {idx < currentSummary.length - 1 ? ", " : ""}
                       </span>
@@ -239,7 +241,7 @@ const LedgerTableRow = ({ ledger, groupName, onEdit, onDelete }) => {
           </Button>
         </td>
 
-        <td className="text-end">
+        <td className="py-1 text-end">
           <Button
             variant="outline-secondary"
             size="sm"
@@ -258,7 +260,6 @@ const LedgerTableRow = ({ ledger, groupName, onEdit, onDelete }) => {
         </td>
       </tr>
 
-      {/* Yarn Balance Modal */}
       <YarnBalanceModal
         show={showBalanceModal}
         onHide={() => setShowBalanceModal(false)}
