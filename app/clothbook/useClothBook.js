@@ -3,32 +3,38 @@ import { useEffect, useState, useMemo } from 'react'
 import { api } from '../utils_frontend/apiCalls'
 
 export function useClothBook() {
-    /* ================= API DATA ================= */
     const [cloths, setCloths] = useState([])
     const [weavers, setWeavers] = useState([])
+    const [clothBooks, setClothBooks] = useState([])
+
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
 
-    /* ================= FORM STATE ================= */
-    const [show, setShow] = useState(false)
     const [ledgerId, setLedgerId] = useState('')
     const [entries, setEntries] = useState([])
 
-    /* ================= FETCH DATA ================= */
+    /* ===== DATE STATE (for report) ===== */
+    const [selectedDate, setSelectedDate] = useState(
+        new Date().toISOString().slice(0, 10) // yyyy-mm-dd
+    )
+
+    /* ================= INITIAL FETCH ================= */
     useEffect(() => {
         let active = true
 
-        const fetchWeavers = api.get('/api/wledgers')
-        const fetchCloths = api.get('/api/cloths')
-
-        Promise.all([fetchWeavers, fetchCloths])
-            .then(([weaverRes, clothRes]) => {
+        Promise.all([
+            api.get('/api/wledgers'),
+            api.get('/api/cloths'),
+            api.get(`/api/clothbook?date=${selectedDate}`)
+        ])
+            .then(([weaverRes, clothRes, clothBookRes]) => {
                 if (!active) return
                 setWeavers(weaverRes.data)
                 setCloths(clothRes.data)
+                setClothBooks(clothBookRes.data)
             })
             .catch(err => {
-                console.error('Fetch error:', err)
+                console.error(err)
                 if (active) setError(err)
             })
             .finally(() => {
@@ -38,16 +44,25 @@ export function useClothBook() {
         return () => { active = false }
     }, [])
 
+    /* ================= REFRESH CLOTHBOOK (BY DATE) ================= */
+    const refetchClothBooks = async (date) => {
+        try {
+            setLoading(true)
+            const res = await api.get(`/api/clothbook?date=${date}`)
+            setClothBooks(res.data)
+        } catch (err) {
+            console.error(err)
+            setError(err)
+        } finally {
+            setLoading(false)
+        }
+    }
+
     /* ================= ADD ROW ================= */
     const addRow = () => {
         setEntries(prev => [
             ...prev,
-            {
-                clothId: '',
-                quantity: '',
-                yarnWeight: 0,
-                weightPerPcs: 0,
-            }
+            { clothId: '', quantity: '', yarnWeight: 0, weightPerPcs: 0 }
         ])
     }
 
@@ -55,17 +70,16 @@ export function useClothBook() {
     const updateRow = (index, field, value) => {
         setEntries(prev => {
             const updated = [...prev]
-            updated[index][field] = value
-
             const row = updated[index]
+
+            row[field] = value
+
             const cloth = cloths.find(c => c._id === row.clothId)
 
-            /* when cloth selected → capture weightPerPcs */
             if (field === 'clothId' && cloth) {
                 row.weightPerPcs = cloth.weightPerPcs
             }
 
-            /* auto yarn calculation */
             if (cloth && row.quantity > 0) {
                 row.yarnWeight =
                     Number(row.quantity) * Number(row.weightPerPcs)
@@ -101,7 +115,7 @@ export function useClothBook() {
         return Object.values(map)
     }, [entries, cloths])
 
-    /* ================= FINAL PAYLOAD ================= */
+    /* ================= PAYLOAD ================= */
     const payload = useMemo(() => ({
         wLedgerId: ledgerId,
         cloths: entries.map(e => ({
@@ -116,17 +130,16 @@ export function useClothBook() {
         })),
     }), [ledgerId, entries, yarnSummary])
 
-    /* ================= RETURN ================= */
     return {
-        /* api */
+        /* master data */
         cloths,
         weavers,
-        loading,
-        error,
 
-        /* ui */
-        show,
-        setShow,
+        /* clothbook data */
+        clothBooks,
+        selectedDate,
+        setSelectedDate,
+        refetchClothBooks,
 
         /* form */
         ledgerId,
@@ -138,5 +151,9 @@ export function useClothBook() {
         /* computed */
         yarnSummary,
         payload,
+
+        /* ui */
+        loading,
+        error,
     }
 }

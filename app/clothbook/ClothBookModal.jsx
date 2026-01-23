@@ -1,6 +1,8 @@
 "use client";
 import { Modal, Button, Form, Table, Spinner } from "react-bootstrap";
 import { useClothBook } from "./useClothBook";
+import { api } from "../utils_frontend/apiCalls";
+
 export default function ClothBookModal({ show, setShow }) {
   const {
     weavers,
@@ -20,9 +22,14 @@ export default function ClothBookModal({ show, setShow }) {
   if (error) return <p>Failed to load data</p>;
 
   const handleSave = async () => {
-    console.log("Payload to backend:", payload);
-    // await api.post('/api/clothbook', payload)
-    setShow(false);
+    try {
+      await api.post("/api/clothbook", payload);
+      setLedgerId("");
+      setShow(false);
+    } catch (err) {
+      console.error("Save failed:", err);
+      alert("Failed to save Cloth Book");
+    }
   };
 
   return (

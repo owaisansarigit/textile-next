@@ -1,63 +1,90 @@
 "use client";
-import { Table, Form, Row, Col, Button, Badge } from "react-bootstrap";
+import { Table, Form, Row, Col, Button, Badge, Spinner } from "react-bootstrap";
 import { useState, useMemo } from "react";
+import { useClothBook } from "./useClothBook";
 
 export default function ClothBookReportTable() {
-  const rows = [
-    {
-      weaver: "K.B",
-      quantities: { "Cloth A": 10, "Cloth B": 5, "Cloth C": 2 },
-    },
-    { weaver: "R.A", quantities: { "Cloth A": 6, "Cloth B": 4, "Cloth C": 0 } },
-    {
-      weaver: "Qurban",
-      quantities: { "Cloth A": 3, "Cloth B": 2, "Cloth C": 1 },
-    },
-  ];
+  const {
+    clothBooks,
+    loading,
+    selectedDate,
+    setSelectedDate,
+    refetchClothBooks,
+  } = useClothBook();
 
+  const [filters, setFilters] = useState({
+    weaver: "",
+    cloth: "",
+  });
+
+  const resetFilters = () => setFilters({ weaver: "", cloth: "" });
+
+  /* ================= TRANSFORM API DATA ================= */
+  const rows = useMemo(() => {
+    const map = {};
+
+    clothBooks.forEach((cb) => {
+      const weaver = cb.wLedgerId?.name || "Unknown";
+
+      if (!map[weaver]) map[weaver] = { weaver, quantities: {} };
+
+      cb.cloths.forEach((c) => {
+        const clothName = c.cloth?.name;
+        if (!clothName) return;
+
+        map[weaver].quantities[clothName] =
+          (map[weaver].quantities[clothName] || 0) + c.quantity;
+      });
+    });
+
+    return Object.values(map);
+  }, [clothBooks]);
+
+  /* ================= QUALITIES ================= */
   const qualities = useMemo(
     () => [...new Set(rows.flatMap((r) => Object.keys(r.quantities)))],
     [rows],
   );
 
-  const [filters, setFilters] = useState({
-    date: "today",
-    weaver: "",
-    cloth: "",
-  });
-
-  const resetFilters = () =>
-    setFilters({ date: "today", weaver: "", cloth: "" });
-
-  /* ===== Detect filtered state ===== */
-  const isFiltered =
-    filters.weaver || filters.cloth || filters.date !== "today";
+  /* ================= FILTER ================= */
+  const isFiltered = filters.weaver || filters.cloth;
 
   const filteredRows = rows.filter(
     (r) => !filters.weaver || r.weaver === filters.weaver,
   );
 
-  const columnTotals = qualities.reduce((acc, q) => {
-    acc[q] = filteredRows.reduce((s, r) => s + (r.quantities[q] || 0), 0);
-    return acc;
-  }, {});
+  /* ================= TOTALS ================= */
+  const columnTotals = useMemo(() => {
+    const totals = {};
+    qualities.forEach((q) => (totals[q] = 0));
+
+    filteredRows.forEach((r) => {
+      qualities.forEach((q) => {
+        totals[q] += r.quantities[q] || 0;
+      });
+    });
+
+    return totals;
+  }, [filteredRows, qualities]);
 
   const grandTotal = Object.values(columnTotals).reduce((a, b) => a + b, 0);
+
+  if (loading) return <Spinner animation="border" />;
 
   return (
     <>
       {/* ================= FILTER BAR ================= */}
-      <Row className="mb-2 align-items-end g-2">
+      <Row className="mb-2 g-2 align-items-end">
         <Col md={2}>
-          <Form.Select
+          <Form.Control
+            type="date"
             size="sm"
-            value={filters.date}
-            onChange={(e) => setFilters({ ...filters, date: e.target.value })}
-          >
-            <option value="today">Today</option>
-            <option value="yesterday">Yesterday</option>
-            <option value="custom">Custom</option>
-          </Form.Select>
+            value={selectedDate}
+            onChange={(e) => {
+              setSelectedDate(e.target.value);
+              refetchClothBooks(e.target.value);
+            }}
+          />
         </Col>
 
         <Col md={2}>
@@ -101,18 +128,18 @@ export default function ClothBookReportTable() {
         )}
       </Row>
 
-      {/* ================= TABLE ================= */}
+      {/* ================= MAIN TABLE ================= */}
       <div className="table-responsive">
         <Table
           bordered
           size="sm"
-          className={`text-nowrap align-middle ${
+          className={`text-nowrap ${
             isFiltered ? "table-warning border-warning" : ""
           }`}
         >
           <thead className={isFiltered ? "table-warning" : "table-light"}>
             <tr>
-              <th style={{ width: 50 }}>#</th>
+              <th>#</th>
               <th>Weaver</th>
               {qualities.map((q) => (
                 <th key={q} className="text-end">
@@ -135,7 +162,7 @@ export default function ClothBookReportTable() {
                   <td>{i + 1}</td>
                   <td>{r.weaver}</td>
                   {qualities.map((q) => (
-                    <td key={q} className="text-end py-1 px-2">
+                    <td key={q} className="text-end py-1">
                       {r.quantities[q] || ""}
                     </td>
                   ))}
@@ -145,7 +172,7 @@ export default function ClothBookReportTable() {
             })}
           </tbody>
 
-          <tfoot className="fw-bold table-secondary">
+          <tfoot className="table-secondary fw-bold">
             <tr>
               <td colSpan={2}>Total</td>
               {qualities.map((q) => (
@@ -157,37 +184,25 @@ export default function ClothBookReportTable() {
             </tr>
           </tfoot>
         </Table>
+
         {/* ================= QUALITY SUMMARY ================= */}
-        {qualities.length > 0 && (
-          <div className="mt-3" style={{ maxWidth: 350 }}>
-            <h6 className="mb-2">Quality-wise Summary</h6>
-
-            <Table bordered size="sm" className="mb-0">
-              <thead className="table-light">
-                <tr>
-                  <th>Quality</th>
-                  <th className="text-end">Quantity</th>
+        <div className="mt-3" style={{ maxWidth: 350 }}>
+          <h6 className="mb-2">Quality-wise Summary</h6>
+          <Table bordered size="sm">
+            <tbody>
+              {qualities.map((q) => (
+                <tr key={q}>
+                  <td>{q}</td>
+                  <td className="text-end fw-bold">{columnTotals[q]}</td>
                 </tr>
-              </thead>
-
-              <tbody>
-                {qualities.map((q) => (
-                  <tr key={q}>
-                    <td>{q}</td>
-                    <td className="text-end fw-bold">{columnTotals[q]}</td>
-                  </tr>
-                ))}
-              </tbody>
-
-              <tfoot className="table-secondary fw-bold">
-                <tr>
-                  <td>Total</td>
-                  <td className="text-end">{grandTotal}</td>
-                </tr>
-              </tfoot>
-            </Table>
-          </div>
-        )}
+              ))}
+              <tr className="table-secondary fw-bold">
+                <td>Total</td>
+                <td className="text-end">{grandTotal}</td>
+              </tr>
+            </tbody>
+          </Table>
+        </div>
       </div>
     </>
   );
