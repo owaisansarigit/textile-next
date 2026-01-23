@@ -1,10 +1,10 @@
 import mongoose from 'mongoose';
-
 const clothBookSchema = new mongoose.Schema({
     wLedgerId: { type: mongoose.Schema.Types.ObjectId, ref: 'WLedger', required: true },
     cloths: [{
         cloth: { type: mongoose.Schema.Types.ObjectId, ref: 'Cloth', required: true },
-        quantity: { type: Number }
+        quantity: { type: Number },
+        yarnWeight: { type: Number }
     }],
     yarnWeight: [{
         yarnCategory: { type: String, enum: ['Cotton', 'Viscose', 'CP', 'PC', 'Roto'] },

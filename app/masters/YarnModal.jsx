@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Modal, Button, Form, Row, Col } from "react-bootstrap";
 
-const categories = ["Cotton", "Rayon", "CP", "Roto"];
+const categories = ["Cotton", "Viscose", "CP", "Roto"];
 const counts = ["40", "42", "46", "60", "80"];
 
 const emptyForm = {
@@ -40,7 +40,7 @@ const YarnModal = ({ show, onHide, editingYarn, getAll }) => {
       [name]: value === "" ? "" : Number(value) || value,
     }));
   };
-  
+
   const stockWeight = useMemo(() => {
     return (
       Number(formData.looseStock || 0) +
